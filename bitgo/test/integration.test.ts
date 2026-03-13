@@ -1,7 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { config } from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.env") });
+
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 
 // --- Test helpers ---
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

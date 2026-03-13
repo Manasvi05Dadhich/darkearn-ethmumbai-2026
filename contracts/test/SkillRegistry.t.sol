@@ -21,15 +21,13 @@ contract SkillRegistryTest is Test {
         registry.setBountyEscrow(escrow);
     }
 
-    // Test 1: BountyEscrow address can call recordCompletion successfully
     function test_authorizedCallSucceeds() public {
         vm.prank(escrow);
-        registry.recordCompletion(alice, 0); // Solidity category
+        registry.recordCompletion(alice, 0);
 
         assertEq(registry.getCompletionsInCategory(alice, 0), 1);
     }
 
-    // Test 2: Any other address calling recordCompletion reverts
     function test_unauthorizedCallReverts() public {
         vm.prank(random);
         vm.expectRevert(SkillRegistry.OnlyBountyEscrow.selector);

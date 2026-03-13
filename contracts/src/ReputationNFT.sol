@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 import {IVerifier} from "./ReputationVerifier.sol";
 
-/// @title ReputationNFT - Soulbound ERC-721 for DarkEarn reputation
-/// @notice One NFT per ENS name. Band backed by ZK proof. Cannot be transferred.
 contract ReputationNFT is ERC721 {
     using Strings for uint256;
 
@@ -135,15 +133,12 @@ contract ReputationNFT is ERC721 {
     ) external {
         if (ownerOf(_tokenId) != msg.sender) revert NotTokenOwner();
 
-        // Verify ZK proof
         bool valid = verifier.verify(_proof, _publicInputs);
         if (!valid) revert InvalidProof();
 
-        // Extract new band
         uint256 newBand = uint256(_publicInputs[0]);
         uint256 oldBand = tokenIdToBand[_tokenId];
 
-        // New band must be strictly greater
         if (newBand <= oldBand) revert BandNotHigher();
 
         tokenIdToBand[_tokenId] = newBand;
@@ -185,21 +180,18 @@ contract ReputationNFT is ERC721 {
             );
     }
 
-    /// @notice Get token ID by ENS name
     function getTokenIdByENS(
         string calldata _ensName
     ) external view returns (uint256) {
         return ensToTokenId[_ensName];
     }
 
-    /// @notice Get minter address for a token (used by BountyEscrow for privacy check)
     function getMinterAddress(
         uint256 _tokenId
     ) external view returns (address) {
         return tokenIdToMinter[_tokenId];
     }
 
-    /// @notice Get band for a token
     function getBand(uint256 _tokenId) external view returns (uint256) {
         return tokenIdToBand[_tokenId];
     }

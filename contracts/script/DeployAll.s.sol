@@ -14,11 +14,9 @@ contract DeployAll is Script {
     function run() external {
         vm.startBroadcast();
 
-        // 1. Deploy HonkVerifier
         HonkVerifier verifier = new HonkVerifier();
         console.log("HonkVerifier deployed at:", address(verifier));
 
-        // 2. Deploy ReputationNFT
         ReputationNFT nft = new ReputationNFT(address(verifier));
         console.log("ReputationNFT deployed at:", address(nft));
 
@@ -35,8 +33,6 @@ contract DeployAll is Script {
         console.log("SkillRegistry linked to BountyEscrow");
 
         vm.stopBroadcast();
-
-        // 6. Write all addresses atomically to addresses.json
         string memory json = string(
             abi.encodePacked(
                 "{\n",
