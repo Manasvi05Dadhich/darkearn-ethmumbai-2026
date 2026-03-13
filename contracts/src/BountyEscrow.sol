@@ -16,8 +16,6 @@ contract BountyEscrow {
         Disputed,
         Refunded
     }
-
-    // --- Structs ---
     struct Bounty {
         uint256 bountyId;
         address posterAddress;
@@ -58,11 +56,12 @@ contract BountyEscrow {
     mapping(uint256 => Bounty) internal _bounties;
 
     // bountyId => applicantId => Application
-    mapping(uint256 => mapping(uint256 => Application)) public applications;
+    mapping(uint256 => mapping(uint256 => Application)) internal _applications;
     // bountyId => applicant address => applicantId (for lookup)
-    mapping(uint256 => mapping(address => uint256)) public applicantAddressToId;
+    mapping(uint256 => mapping(address => uint256))
+        internal _applicantAddressToId;
     // bountyId => applicant address => has applied
-    mapping(uint256 => mapping(address => bool)) public hasApplied;
+    mapping(uint256 => mapping(address => bool)) internal _hasApplied;
 
     uint256 public constant DISPUTE_WINDOW = 7 days;
     uint256 public constant DISPUTE_RESOLUTION_DELAY = 48 hours;
@@ -203,19 +202,19 @@ contract BountyEscrow {
         if (b.status != BountyStatus.Open) revert BountyNotOpen();
         if (block.timestamp >= b.deadline) revert DeadlinePassed();
         if (reputationNFT.balanceOf(msg.sender) == 0) revert NoReputationNFT();
-        if (hasApplied[_bountyId][msg.sender]) revert AlreadyApplied();
+        if (_hasApplied[_bountyId][msg.sender]) revert AlreadyApplied();
 
         b.applicantCount++;
         uint256 applicantId = b.applicantCount;
 
-        Application storage app = applications[_bountyId][applicantId];
+        Application storage app = _applications[_bountyId][applicantId];
         app.applicantAddress = msg.sender;
         app.applicantENS = _ensName;
         app.applicationMessage = _message;
         app.applicantId = applicantId;
 
-        applicantAddressToId[_bountyId][msg.sender] = applicantId;
-        hasApplied[_bountyId][msg.sender] = true;
+        _applicantAddressToId[_bountyId][msg.sender] = applicantId;
+        _hasApplied[_bountyId][msg.sender] = true;
 
         // Event only shows bountyId and applicantId - NO identity data
         emit ApplicationSubmitted(_bountyId, applicantId);
@@ -231,7 +230,7 @@ contract BountyEscrow {
         if (_applicantId == 0 || _applicantId > b.applicantCount)
             revert InvalidApplicantId();
 
-        Application storage app = applications[_bountyId][_applicantId];
+        Application storage app = _applications[_bountyId][_applicantId];
         app.isRevealed = true;
 
         emit ApplicantRevealed(_bountyId, _applicantId, app.applicantENS);
@@ -244,12 +243,12 @@ contract BountyEscrow {
         Bounty storage b = _bounties[_bountyId];
         if (msg.sender != b.posterAddress) revert NotPoster();
 
-        uint256 applicantId = applicantAddressToId[_bountyId][
+        uint256 applicantId = _applicantAddressToId[_bountyId][
             _applicantAddress
         ];
         if (applicantId == 0) revert InvalidApplicantId();
 
-        Application storage app = applications[_bountyId][applicantId];
+        Application storage app = _applications[_bountyId][applicantId];
         if (!app.isRevealed) revert NotRevealed();
         if (app.isAccepted) revert AlreadyAccepted();
 
@@ -315,8 +314,8 @@ contract BountyEscrow {
 
         // PRIVACY ENFORCEMENT: recipient must NOT be the winner's ENS-linked wallet
         // Look up winner's application to get their ENS name, then get their minter address
-        uint256 winnerApplicantId = applicantAddressToId[_bountyId][b.winner];
-        Application storage winnerApp = applications[_bountyId][
+        uint256 winnerApplicantId = _applicantAddressToId[_bountyId][b.winner];
+        Application storage winnerApp = _applications[_bountyId][
             winnerApplicantId
         ];
         uint256 winnerTokenId = reputationNFT.ensToTokenId(
@@ -433,7 +432,7 @@ contract BountyEscrow {
             string memory ensName
         )
     {
-        Application storage app = applications[_bountyId][_applicantId];
+        Application storage app = _applications[_bountyId][_applicantId];
         applicantId = app.applicantId;
         message = app.applicationMessage;
         isRevealed = app.isRevealed;
