@@ -17,8 +17,6 @@ export interface PrizesData {
     locks: FundLock[];
 }
 
-// --- JSON Helpers ---
-
 function ensureDataDir(): void {
     const dir = path.dirname(config.PRIZES_JSON_PATH);
     if (!existsSync(dir)) {
@@ -41,14 +39,9 @@ function writePrizes(data: PrizesData): void {
     writeFileSync(config.PRIZES_JSON_PATH, JSON.stringify(data, null, 2));
 }
 
-// --- Wallet Service ---
 
 import { getBitgo, getCoin, getWallet } from "./bitgoClient.js";
 
-/**
- * Create a new MPC hot wallet for a poster.
- * Returns { walletId, receiveAddress }.
- */
 export async function createWallet(label: string): Promise<{
     walletId: string;
     receiveAddress: string;
@@ -60,7 +53,7 @@ export async function createWallet(label: string): Promise<{
         passphrase: config.BITGO_WALLET_PASSPHRASE,
         multisigType: "tss",
         enterprise: config.BITGO_ENTERPRISE_ID,
-        walletVersion: 5, // Required for ECDSA (ETH)
+        walletVersion: 5,
     });
 
     const wallet = result.wallet;
@@ -70,7 +63,7 @@ export async function createWallet(label: string): Promise<{
     console.log(`[WalletService] Created wallet ${walletId} — ${label}`);
     console.log(`[WalletService] Receive address: ${receiveAddress}`);
 
-    // Attach webhook policy if WEBHOOK_URL is configured
+
     if (config.WEBHOOK_URL) {
         try {
             await attachWebhookPolicy(walletId);
@@ -83,17 +76,14 @@ export async function createWallet(label: string): Promise<{
     return { walletId, receiveAddress };
 }
 
-/**
- * Lock funds for a bounty. Checks wallet balance >= prize + already reserved.
- * Records reservation in prizes.json. Returns lockId.
- */
+
 export async function lockFunds(
     walletId: string,
     bountyId: number,
     prizeAmount: string,
     posterAddress: string
 ): Promise<string> {
-    // 1. Check existing reservations for this wallet
+
     const data = readPrizes();
     const existingLocks = data.locks.filter(
         (l) => l.bitgoWalletId === walletId && l.status === "locked"
@@ -103,7 +93,7 @@ export async function lockFunds(
         BigInt(0)
     );
 
-    // 2. Check wallet balance
+
     const wallet = await getWallet(walletId);
     const balance = BigInt(wallet.balanceString() || "0");
     const needed = totalReserved + BigInt(prizeAmount);
@@ -115,7 +105,6 @@ export async function lockFunds(
         );
     }
 
-    // 3. Create lock entry
     const lockId = `lock-${uuidv4().slice(0, 8)}`;
     const lock: FundLock = {
         lockId,
@@ -137,9 +126,6 @@ export async function lockFunds(
     return lockId;
 }
 
-/**
- * Unlock funds for a bounty (cancel/refund).
- */
 export async function unlockFunds(
     walletId: string,
     lockId: string
@@ -165,9 +151,6 @@ export async function unlockFunds(
     );
 }
 
-/**
- * Send payment from a poster's wallet to a recipient.
- */
 export async function sendPayment(
     walletId: string,
     recipientAddress: string,
@@ -194,9 +177,6 @@ export async function sendPayment(
     return String(txid);
 }
 
-/**
- * Mark a lock as paid after successful transfer.
- */
 export function markLockPaid(bountyId: number): void {
     const data = readPrizes();
     const lock = data.locks.find(
@@ -208,17 +188,12 @@ export function markLockPaid(bountyId: number): void {
     }
 }
 
-/**
- * Get lock data for a bounty.
- */
+
 export function getLockByBountyId(bountyId: number): FundLock | undefined {
     const data = readPrizes();
     return data.locks.find((l) => l.bountyId === bountyId);
 }
 
-/**
- * Get wallet balance.
- */
 export async function getWalletBalance(walletId: string): Promise<string> {
     const wallet = await getWallet(walletId);
     return wallet.balanceString() || "0";
@@ -277,7 +252,6 @@ async function attachWebhookPolicy(walletId: string): Promise<void> {
         return;
     }
 
-    // tp create webhook policy rule
     await bitgo
         .post(
             bitgo.url(

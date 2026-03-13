@@ -1,5 +1,6 @@
 import { useState, type FC, type MouseEvent } from "react";
 import { Lock, Shield, EyeOff, Key } from "lucide-react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 // ── Types ────────────────────────────────────────────────────
 interface Bounty {
@@ -63,22 +64,14 @@ const WALLETS: Wallet[] = [
 ];
 
 // ── Navbar ───────────────────────────────────────────────────
-const Navbar: FC<NavbarProps> = ({ onConnect }) => (
+const Navbar: FC = () => (
   <nav className="fixed top-0 left-0 right-0 z-50 border-b border-black/50 bg-[#060606]/95 backdrop-blur">
     <div className="w-full px-6 md:px-12 flex items-center justify-between" style={{ height: 72 }}>
       <div className="flex items-center gap-2">
         <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
         <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">DARKEARN</span>
       </div>
-      <button
-        onClick={onConnect}
-        className="font-bold text-[12px] uppercase transition-colors"
-        style={{ background: "#e8ff00", color: "#000", padding: "10px 18px", border: "none", cursor: "pointer", fontFamily: "inherit", borderRadius: 2 }}
-        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; }}
-        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; }}
-      >
-        CONNECT WALLET
-      </button>
+      <ConnectButton />
     </div>
   </nav>
 );
@@ -104,7 +97,6 @@ const BountyCard: FC<BountyCardProps> = ({ title, prize, tags, deadline, apps })
   </div>
 );
 
-// ── ConnectWalletModal ────────────────────────────────────────
 const ConnectWalletModal: FC<ConnectWalletModalProps> = ({ onClose }) => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center p-6"
@@ -152,9 +144,7 @@ const ConnectWalletModal: FC<ConnectWalletModalProps> = ({ onClose }) => (
   </div>
 );
 
-// ── LoginPage ─────────────────────────────────────────────────
 const LoginPage: FC = () => {
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [isBrowsing, setIsBrowsing] = useState<boolean>(false);
 
   const handleBrowse = () => {
@@ -201,7 +191,7 @@ const LoginPage: FC = () => {
         }
       `}</style>
 
-      <Navbar onConnect={() => setModalOpen(true)} />
+      <Navbar />
 
       {/* ── HERO ── */}
       <section className="relative flex items-center justify-center bg-grid" style={{ paddingTop: 72, minHeight: "85vh", width: "100%" }}>
@@ -234,15 +224,19 @@ const LoginPage: FC = () => {
           </p>
 
           <div className="flex gap-4 justify-center flex-wrap">
-            <button
-              onClick={() => setModalOpen(true)}
-              className="font-bold uppercase"
-              style={{ background: "#e8ff00", color: "#000", padding: "16px 36px", fontSize: 13, border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", borderRadius: 2 }}
-              onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; e.currentTarget.style.transform = "translateY(0)"; }}
-            >
-              START EARNING
-            </button>
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <button
+                  onClick={openConnectModal}
+                  className="font-bold uppercase"
+                  style={{ background: "#e8ff00", color: "#000", padding: "16px 36px", fontSize: 13, border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", borderRadius: 2 }}
+                  onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  START EARNING
+                </button>
+              )}
+            </ConnectButton.Custom>
 
             <button
               onClick={handleBrowse}
@@ -297,21 +291,25 @@ const LoginPage: FC = () => {
             </div>
 
             {!isBrowsing && (
-              <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-[1px]" onClick={() => setModalOpen(true)}>
-                <div className="text-center cursor-pointer rounded-lg border border-[#1a1a1a] p-8 shadow-2xl transition-transform hover:-translate-y-1" style={{ background: "#0a0a0a", maxWidth: 360 }}>
-                  <Key className="w-6 h-6 mx-auto mb-4" style={{ color: "#e8ff00" }} />
-                  <h3 className="font-bold mb-3 tracking-widest uppercase text-white" style={{ fontSize: 13 }}>RESTRICTED AREA</h3>
-                  <p className="mb-6 leading-relaxed text-[#888]" style={{ fontSize: 12 }}>
-                    To protect the privacy of our workers and clients, the full board is encrypted for unauthorized visitors.
-                  </p>
-                  <button
-                    className="w-full font-bold uppercase transition-colors"
-                    style={{ background: "#e8ff00", color: "#000", padding: "12px 20px", border: "none", fontSize: 11, letterSpacing: "0.1em", cursor: "pointer", borderRadius: 2 }}
-                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; }}
-                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; }}
-                  >AUTHENTICATE TO VIEW</button>
-                </div>
-              </div>
+              <ConnectButton.Custom>
+                {({ openConnectModal }) => (
+                  <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-[1px]" onClick={openConnectModal}>
+                    <div className="text-center cursor-pointer rounded-lg border border-[#1a1a1a] p-8 shadow-2xl transition-transform hover:-translate-y-1" style={{ background: "#0a0a0a", maxWidth: 360 }}>
+                      <Key className="w-6 h-6 mx-auto mb-4" style={{ color: "#e8ff00" }} />
+                      <h3 className="font-bold mb-3 tracking-widest uppercase text-white" style={{ fontSize: 13 }}>RESTRICTED AREA</h3>
+                      <p className="mb-6 leading-relaxed text-[#888]" style={{ fontSize: 12 }}>
+                        To protect the privacy of our workers and clients, the full board is encrypted for unauthorized visitors.
+                      </p>
+                      <button
+                        className="w-full font-bold uppercase transition-colors"
+                        style={{ background: "#e8ff00", color: "#000", padding: "12px 20px", border: "none", fontSize: 11, letterSpacing: "0.1em", cursor: "pointer", borderRadius: 2 }}
+                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; }}
+                        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; }}
+                      >AUTHENTICATE TO VIEW</button>
+                    </div>
+                  </div>
+                )}
+              </ConnectButton.Custom>
             )}
           </div>
         </div>
@@ -339,7 +337,7 @@ const LoginPage: FC = () => {
         </div>
       </footer>
 
-      {modalOpen && <ConnectWalletModal onClose={() => setModalOpen(false)} />}
+
     </div>
   );
 };

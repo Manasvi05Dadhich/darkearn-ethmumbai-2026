@@ -1,19 +1,46 @@
 import { useState } from "react";
+import { useAccount } from "wagmi";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import BountyBoard from "./pages/BountyBoard";
 import DashboardPage from "./pages/dashboard/index";
+import { useReputationNFT } from "./hooks/useReputationNFT";
 
-type PageType = "login" | "onboarding" | "bounties" | "dashboard";
+type PageType = "bounties" | "dashboard";
 
 function App() {
-    const [currentPage, setCurrentPage] = useState<PageType>("login");
+    const { isConnected, address } = useAccount();
+    const { hasNFT, band, isLoading } = useReputationNFT(address);
+    const [currentPage, setCurrentPage] = useState<PageType>("bounties");
 
+    // Not connected → show login
+    if (!isConnected) {
+        return <LoginPage />;
+    }
+
+    // Connected but loading NFT check
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#060606]">
+                <div className="text-center">
+                    <div className="w-8 h-8 border-2 border-[#e8ff00] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-[#888] text-sm">Checking reputation...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Connected but no NFT → onboarding
+    if (!hasNFT) {
+        return <OnboardingPage />;
+    }
+
+    // Connected + has NFT → main app
     return (
         <>
-            {/* Dev Navigation Bar - Temporary to easily switch between pages */}
+            {/* Dev Navigation Bar */}
             <div className="fixed bottom-4 right-4 z-[9999] flex gap-2 bg-zinc-900 border border-zinc-800 p-2 rounded-lg shadow-2xl">
-                {(["login", "onboarding", "bounties", "dashboard"] as PageType[]).map((page) => (
+                {(["bounties", "dashboard"] as PageType[]).map((page) => (
                     <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
@@ -25,8 +52,6 @@ function App() {
                 ))}
             </div>
 
-            {currentPage === "login" && <LoginPage />}
-            {currentPage === "onboarding" && <OnboardingPage />}
             {currentPage === "bounties" && <BountyBoard />}
             {currentPage === "dashboard" && <DashboardPage />}
         </>

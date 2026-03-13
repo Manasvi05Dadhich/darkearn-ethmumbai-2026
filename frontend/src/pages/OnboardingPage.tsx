@@ -1,7 +1,8 @@
-import { useState, type FC, type MouseEvent } from "react";
+import { useState, useEffect, type FC, type MouseEvent } from "react";
 import { Info, ExternalLink, ArrowRight, CheckCircle2, Shield, Loader2 } from "lucide-react";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { CONTRACTS } from "../contracts";
 
-// Navbar layout inside onboarding (so it looks like part of the site)
 const OnboardingNavbar: FC<{ step: 1 | 2; onBack?: () => void }> = ({ step, onBack }) => (
     <nav className="absolute top-0 left-0 right-0 z-50 border-b border-black/50 bg-[#060606]/95 backdrop-blur">
         <div className="w-full px-4 md:px-8 flex items-center justify-between" style={{ height: 56 }}>
@@ -32,28 +33,54 @@ const OnboardingPage: FC = () => {
     const [ensName, setEnsName] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
-    const [isMinting, setIsMinting] = useState(false);
-    const [isMinted, setIsMinted] = useState(false);
+    const [verifyError, setVerifyError] = useState("");
+
+    const { address } = useAccount();
+
+    // Check if ENS is already registered on-chain
+    const { data: existingTokenId } = useReadContract({
+        ...CONTRACTS.ReputationNFT,
+        functionName: "ensToTokenId",
+        args: [ensName],
+        query: { enabled: isVerifying && ensName.includes(".eth") },
+    });
+
+    // When the on-chain check returns, verify
+    useEffect(() => {
+        if (!isVerifying) return;
+        if (existingTokenId !== undefined) {
+            setIsVerifying(false);
+            if (existingTokenId && BigInt(existingTokenId as bigint) > 0n) {
+                setVerifyError("This ENS name is already registered on DarkEarn.");
+                setIsVerified(false);
+            } else {
+                setIsVerified(true);
+                setVerifyError("");
+            }
+        }
+    }, [existingTokenId, isVerifying]);
 
     const handleVerify = () => {
-        if (!ensName.includes('.eth') && ensName.length > 0) {
+        if (!ensName.includes(".eth")) {
+            setVerifyError("Must be a valid .eth name");
             return;
         }
-        if (ensName) {
-            setIsVerifying(true);
-            setTimeout(() => {
-                setIsVerifying(false);
-                setIsVerified(true);
-            }, 1500);
-        }
+        setVerifyError("");
+        setIsVerifying(true);
     };
 
+    // Real contract write for minting
+    const { writeContract, data: txHash, isPending: isMinting, error: mintError } = useWriteContract();
+
+    const { isSuccess: isMinted } = useWaitForTransactionReceipt({ hash: txHash });
+
     const handleMint = () => {
-        setIsMinting(true);
-        setTimeout(() => {
-            setIsMinting(false);
-            setIsMinted(true);
-        }, 2000);
+        if (!address) return;
+        writeContract({
+            ...CONTRACTS.ReputationNFT,
+            functionName: "testMint",
+            args: [address, ensName, BigInt(0)], // Band 0 for new users
+        });
     };
 
     return (
@@ -163,7 +190,12 @@ const OnboardingPage: FC = () => {
                                 {isVerified && (
                                     <div className="verified-msg flex items-center gap-2 mt-2">
                                         <CheckCircle2 className="w-4 h-4" style={{ color: "#22c55e" }} />
-                                        <span className="text-[13px] font-semibold" style={{ color: "#22c55e" }}>{ensName} verified.</span>
+                                        <span className="text-[13px] font-semibold" style={{ color: "#22c55e" }}>{ensName} available on DarkEarn.</span>
+                                    </div>
+                                )}
+                                {verifyError && (
+                                    <div className="verified-msg flex items-center gap-2 mt-2">
+                                        <span className="text-[13px] font-semibold" style={{ color: "#ef4444" }}>{verifyError}</span>
                                     </div>
                                 )}
                             </div>
@@ -316,6 +348,7 @@ const OnboardingPage: FC = () => {
                             </div>
 
                             {!isMinted ? (
+                                <>
                                 <button
                                     onClick={handleMint}
                                     disabled={isMinting}
@@ -330,9 +363,15 @@ const OnboardingPage: FC = () => {
                                     onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!isMinting) { e.currentTarget.style.transform = "translateY(-1px)"; } }}
                                     onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
-                                    {isMinting ? "Generating ZK Proof..." : "Mint My Profile"}
+                                    {isMinting ? "Confirm in Wallet..." : "Mint My Profile"}
                                     {isMinting && <Loader2 className="w-5 h-5 animate-spin" />}
                                 </button>
+                                {mintError && (
+                                    <p className="text-[12px] text-center mb-4" style={{ color: "#ef4444" }}>
+                                        {mintError.message?.includes("NotContractOwner") ? "Only contract owner can testMint. Use the real mint() with a ZK proof." : mintError.message?.slice(0, 100)}
+                                    </p>
+                                )}
+                                </>
                             ) : null}
 
                             {isMinted && (

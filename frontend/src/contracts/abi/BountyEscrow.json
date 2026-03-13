@@ -1,0 +1,911 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_reputationNFT",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_skillRegistry",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "DISPUTE_RESOLUTION_DELAY",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "DISPUTE_WINDOW",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MAX_CATEGORY_ID",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "acceptApplication",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_applicantAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "applyToBounty",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_ensName",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "_message",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "approveWork",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cancelBounty",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claimPayment",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_recipient",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getApplicant",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_applicantId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "applicantId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "message",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "isRevealed",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "isAccepted",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "ensName",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBountyCore",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "posterAddress",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "posterENS",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "title",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "categoryId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "prizeAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "status",
+        "type": "uint8",
+        "internalType": "enum BountyEscrow.BountyStatus"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBountyMeta",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "winner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "workSubmitted",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "paymentClaimed",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "applicantCount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "disputeRaisedAt",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "bitgoLockId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBountyStatus",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8",
+        "internalType": "enum BountyEscrow.BountyStatus"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "nextBountyId",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "postBounty",
+    "inputs": [
+      {
+        "name": "p",
+        "type": "tuple",
+        "internalType": "struct BountyEscrow.PostBountyParams",
+        "components": [
+          {
+            "name": "posterENS",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "categoryId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "prizeAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "privateBriefFileverseId",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "bitgoWalletId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "bitgoLockId",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "raiseDispute",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "refundExpiredBounty",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "reputationNFT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract ReputationNFT"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "resolveDispute",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_hunterFreshAddress",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "revealApplicant",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_applicantId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "sendPrivateBid",
+    "inputs": [
+      {
+        "name": "_contributor",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_encryptedBid",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "skillRegistry",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract SkillRegistry"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "submitWork",
+    "inputs": [
+      {
+        "name": "_bountyId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_fileverseId",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ApplicantRevealed",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "applicantId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "applicantENS",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ApplicationAccepted",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ApplicationSubmitted",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "applicantId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BountyCancelled",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "bitgoLockId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BountyPosted",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "poster",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BountyRefunded",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "bitgoLockId",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DisputeRaised",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "hunter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "disputeRaisedAt",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PaymentClaimed",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "recipient",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PrivateBidSent",
+    "inputs": [
+      {
+        "name": "contributor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "poster",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "encryptedBid",
+        "type": "bytes",
+        "indexed": false,
+        "internalType": "bytes"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PrivateBriefShared",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "fileverseId",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "WorkApproved",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "winner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "WorkSubmitted",
+    "inputs": [
+      {
+        "name": "bountyId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "poster",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "fileverseId",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyAccepted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "AlreadyApplied",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BountyNotCompleted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BountyNotDisputed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BountyNotInProgress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BountyNotOpen",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CannotPayENSWallet",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DeadlineInPast",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DeadlineNotPassed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DeadlinePassed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DisputeResolutionTooEarly",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "DisputeWindowNotPassed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmptyPosterENS",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "EmptyTitle",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FundsNotLockedInBitGo",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HasApplications",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidApplicantId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidCategoryId",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidDisputeStatus",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoApplicationsRequired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoReputationNFT",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotPoster",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotRevealed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotWinner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PaymentAlreadyMade",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "WorkAlreadySubmitted",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "WorkNotSubmitted",
+    "inputs": []
+  }
+]

@@ -57,13 +57,13 @@ app.post("/bitgo-webhook", async (req, res) => {
         const payload = req.body;
         console.log("[Webhook] Received policy webhook:", JSON.stringify(payload, null, 2));
 
-        
+
         let recipientAddress = "";
 
         if (payload?.recipients?.[0]?.address) {
             recipientAddress = payload.recipients[0].address;
         } else if (payload?.transfer?.entries) {
-           
+
             const receiving = payload.transfer.entries.find(
                 (e: any) => BigInt(e.value || e.valueString || "0") > 0n
             );
@@ -85,7 +85,7 @@ app.post("/bitgo-webhook", async (req, res) => {
             return;
         }
 
-       
+
         const hasNFT = await checkReputationNFT(recipientAddress);
 
         if (hasNFT) {
@@ -140,6 +140,5 @@ export function startWebhookServer(port?: number): ReturnType<typeof app.listen>
     });
     return server;
 }
-
 
 export { app, checkReputationNFT };
