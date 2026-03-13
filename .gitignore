@@ -1,0 +1,37 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# Frontend build
+frontend/.next/
+frontend/out/
+
+# ZK
+circuits/build/
+circuits/target/
+proofs/
+
+# BitGo runtime data (contains lock/bounty data)
+bitgo/data/
+bitgo/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

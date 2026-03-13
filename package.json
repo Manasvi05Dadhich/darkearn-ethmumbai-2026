@@ -1,0 +1,22 @@
+{
+    "name": "darkearn",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Privacy-first Web3 freelance marketplace",
+    "type": "module",
+    "scripts": {
+        "check:config": "tsx -e \"import { config } from './config.js'; console.log(JSON.stringify(config, null, 2))\""
+    },
+    "dependencies": {
+        "dotenv": "^16.6.1",
+        "ethers": "^6.13.4"
+    },
+    "devDependencies": {
+        "@types/node": "^22.13.5",
+        "tsx": "^4.19.2",
+        "typescript": "^5.7.3"
+    },
+    "main": "index.js",
+    "author": "manasvi",
+    "license": "ISC"
+}
