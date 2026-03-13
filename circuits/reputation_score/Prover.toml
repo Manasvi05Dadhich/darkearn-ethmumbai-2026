@@ -1,0 +1,8 @@
+# Demo proof inputs — Band 4 (perfect contributor)
+# 30 completions, 95% approval, 0% disputes, 90 days on platform
+
+darkearn_completions = 30
+darkearn_approval_rate = 95
+darkearn_dispute_rate = 0
+darkearn_account_age_days = 90
+score_band = 4
