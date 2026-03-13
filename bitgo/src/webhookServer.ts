@@ -7,12 +7,11 @@ import { config } from "./config.js";
 const app = express();
 app.use(express.json());
 
-// --- ReputationNFT ABI (minimal) ---
+
 const REPUTATION_NFT_ABI = [
     "function balanceOf(address owner) view returns (uint256)",
 ];
 
-// --- Logger ---
 function logWebhookDecision(
     address: string,
     decision: "approved" | "denied",
@@ -36,7 +35,7 @@ function logWebhookDecision(
     console.log(`[Webhook] ${decision.toUpperCase()}: ${address} — ${reason}`);
 }
 
-// --- Check ReputationNFT ---
+
 async function checkReputationNFT(address: string): Promise<boolean> {
     try {
         const provider = new ethers.JsonRpcProvider(config.BASE_SEPOLIA_RPC_URL);
@@ -53,23 +52,18 @@ async function checkReputationNFT(address: string): Promise<boolean> {
     }
 }
 
-// --- Webhook Policy Endpoint ---
-// BitGo calls this before co-signing outgoing transactions.
-// We check if the recipient has a ReputationNFT on Base Sepolia.
 app.post("/bitgo-webhook", async (req, res) => {
     try {
         const payload = req.body;
         console.log("[Webhook] Received policy webhook:", JSON.stringify(payload, null, 2));
 
-        // Extract recipient address from the payload
-        // BitGo sends transaction details including recipients
+        
         let recipientAddress = "";
 
-        // Try to extract from various possible payload structures
         if (payload?.recipients?.[0]?.address) {
             recipientAddress = payload.recipients[0].address;
         } else if (payload?.transfer?.entries) {
-            // Find the entry that is receiving (positive value)
+           
             const receiving = payload.transfer.entries.find(
                 (e: any) => BigInt(e.value || e.valueString || "0") > 0n
             );
@@ -91,7 +85,7 @@ app.post("/bitgo-webhook", async (req, res) => {
             return;
         }
 
-        // Check if recipient has ReputationNFT
+       
         const hasNFT = await checkReputationNFT(recipientAddress);
 
         if (hasNFT) {
@@ -118,8 +112,7 @@ app.post("/bitgo-webhook", async (req, res) => {
     }
 });
 
-// --- Transfer Notification Endpoint ---
-// BitGo notifies us when a transfer occurs (deposit or withdrawal).
+
 app.post("/bitgo-transfer-notify", (req, res) => {
     const payload = req.body;
     console.log("[Webhook] Transfer notification:", JSON.stringify(payload, null, 2));
@@ -134,12 +127,12 @@ app.post("/bitgo-transfer-notify", (req, res) => {
     res.status(200).json({ ok: true });
 });
 
-// --- Health Check ---
+
 app.get("/health", (_req, res) => {
     res.json({ status: "ok", service: "darkearn-webhook-server" });
 });
 
-// --- Start Server ---
+
 export function startWebhookServer(port?: number): ReturnType<typeof app.listen> {
     const p = port || config.WEBHOOK_SERVER_PORT;
     const server = app.listen(p, () => {
@@ -148,5 +141,5 @@ export function startWebhookServer(port?: number): ReturnType<typeof app.listen>
     return server;
 }
 
-// Export app for testing
+
 export { app, checkReputationNFT };

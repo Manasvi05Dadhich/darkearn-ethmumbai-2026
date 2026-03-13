@@ -7,7 +7,6 @@ import {
     unlockFunds,
 } from "./walletService.js";
 
-// --- BountyEscrow ABI (events only) ---
 const BOUNTY_ESCROW_ABI = [
     "event PaymentClaimed(uint256 indexed bountyId, address indexed winner, address recipient)",
     "event BountyCancelled(uint256 indexed bountyId, bytes32 bitgoLockId)",
@@ -18,13 +17,9 @@ const BOUNTY_ESCROW_ABI = [
 let provider: ethers.WebSocketProvider | ethers.JsonRpcProvider | null = null;
 let escrowContract: ethers.Contract | null = null;
 
-/**
- * Start listening for BountyEscrow events on Base Sepolia.
- */
 export function startEventListener(): void {
     console.log("[EventListener] Starting Base Sepolia event listener...");
 
-    // Use WebSocket if available, fallback to HTTP polling
     const rpcUrl = config.BASE_SEPOLIA_RPC_URL;
     const wsUrl = config.BASE_SEPOLIA_WS_URL;
 
@@ -47,7 +42,6 @@ export function startEventListener(): void {
         provider
     );
 
-    // --- PaymentClaimed ---
     escrowContract.on(
         "PaymentClaimed",
         async (bountyId: bigint, winner: string, recipient: string) => {
@@ -63,14 +57,12 @@ export function startEventListener(): void {
                     return;
                 }
 
-                // Send payment from poster's BitGo wallet to the fresh recipient address
                 const txid = await sendPayment(
                     lock.bitgoWalletId,
                     recipient,
                     lock.prizeAmount
                 );
 
-                // Mark the lock as paid
                 markLockPaid(id);
 
                 console.log(
@@ -85,7 +77,6 @@ export function startEventListener(): void {
         }
     );
 
-    // --- BountyCancelled ---
     escrowContract.on(
         "BountyCancelled",
         async (bountyId: bigint, _bitgoLockId: string) => {
@@ -110,7 +101,6 @@ export function startEventListener(): void {
         }
     );
 
-    // --- BountyRefunded ---
     escrowContract.on("BountyRefunded", async (bountyId: bigint) => {
         const id = Number(bountyId);
         console.log(`[EventListener] BountyRefunded — bounty #${id}`);
@@ -132,22 +122,16 @@ export function startEventListener(): void {
         }
     });
 
-    // --- DisputeRaised ---
     escrowContract.on("DisputeRaised", async (bountyId: bigint) => {
         const id = Number(bountyId);
         console.log(
             `[EventListener] DisputeRaised — bounty #${id}. Waiting for dispute resolution on-chain.`
         );
-        // Dispute resolution (50/50 split) happens when resolveDispute is called on-chain.
-        // The PaymentClaimed events for both halves will trigger the payment flow above.
     });
 
     console.log("[EventListener] Listening for BountyEscrow events...");
 }
 
-/**
- * Stop the event listener.
- */
 export function stopEventListener(): void {
     if (escrowContract) {
         escrowContract.removeAllListeners();

@@ -277,7 +277,7 @@ async function attachWebhookPolicy(walletId: string): Promise<void> {
         return;
     }
 
-    // tp reate webhook policy rule
+    // tp create webhook policy rule
     await bitgo
         .post(
             bitgo.url(
