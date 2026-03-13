@@ -1,44 +1,110 @@
 import type { FC } from "react";
-import { ExternalLink, Shield, CreditCard } from "lucide-react";
+import { Copy, Shield, Wallet, Landmark, BadgeCheck, UserCircle2 } from "lucide-react";
 
 const PAYMENTS = [
-    { bounty: "Security Audit", amount: "$500 USDC", status: "Completed", date: "Mar 5, 2026" },
-    { bounty: "Frontend Build", amount: "$400 USDC", status: "Completed", date: "Feb 28, 2026" },
-    { bounty: "Technical Docs", amount: "$300 USDC", status: "Pending", date: "Feb 20, 2026" },
+    { bounty: "Smart Contract Audit", amount: "+1,200 USDC", status: "Verified", date: "Oct 24, 2023", icon: Wallet },
+    { bounty: "Bug Bounty #402", amount: "+850 USDC", status: "Verified", date: "Oct 21, 2023", icon: Shield },
+    { bounty: "Frontend Fixes", amount: "+400 USDC", status: "Verified", date: "Oct 18, 2023", icon: BadgeCheck },
 ];
 
 const PaymentsTab: FC = () => (
-    <div className="max-w-4xl">
-        {/* Balance Card */}
-        <div className="p-6 rounded-xl border mb-6 flex items-center justify-between" style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}>
-            <div>
-                <p className="text-[11px] font-bold tracking-widest uppercase mb-1" style={{ color: "#888" }}>BitGo Wallet Balance</p>
-                <p className="text-2xl font-bold text-white">$2,500 USDC</p>
-            </div>
-            <button className="px-5 py-2.5 rounded-lg text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer"
-                style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}>Fund Wallet</button>
-        </div>
-
-        {/* Payment History */}
-        <div className="rounded-xl border overflow-hidden mb-6" style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}>
-            <div className="px-6 py-3 flex items-center border-b text-[11px] font-bold tracking-widest uppercase" style={{ color: "#555", borderColor: "#111" }}>
-                <span className="flex-1">Bounty</span><span className="w-28">Amount</span><span className="w-24">Status</span><span className="w-28">Date</span><span className="w-20">Tx</span>
-            </div>
-            {PAYMENTS.map((p, i) => (
-                <div key={i} className="px-6 py-4 flex items-center text-[13px]" style={{ borderBottom: "1px solid #111" }}>
-                    <span className="flex-1 text-white font-medium">{p.bounty}</span>
-                    <span className="w-28 font-bold" style={{ color: "#e8ff00" }}>{p.amount}</span>
-                    <span className="w-24 text-[11px] font-bold uppercase" style={{ color: p.status === "Completed" ? "#22c55e" : "#f59e0b" }}>{p.status}</span>
-                    <span className="w-28" style={{ color: "#777" }}>{p.date}</span>
-                    <a href="#" className="w-20 flex items-center gap-1" style={{ color: "#3b82f6", fontSize: 12 }}>View <ExternalLink className="w-3 h-3" /></a>
+    <div className="max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+                <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ background: "rgba(232,255,0,0.12)", border: "1px solid rgba(232,255,0,0.18)" }}
+                >
+                    <UserCircle2 className="w-6 h-6" style={{ color: "#e8ff00" }} />
                 </div>
-            ))}
+                <div>
+                    <p className="text-[20px] font-extrabold text-white leading-none">DarkEarn</p>
+                    <p className="text-[12px]" style={{ color: "#e8ff00" }}>alice.eth</p>
+                </div>
+            </div>
+            <span
+                className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                style={{ background: "rgba(232,255,0,0.12)", color: "#e8ff00" }}
+            >
+                Band 3
+            </span>
         </div>
 
-        {/* Status Card */}
-        <div className="p-5 rounded-lg border flex items-center gap-3" style={{ background: "rgba(232,255,0,0.02)", borderColor: "rgba(232,255,0,0.1)" }}>
-            <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-            <p className="text-[12px] font-medium" style={{ color: "#999" }}>All payments verified by ZK reputation check. Powered by BitGo MPC.</p>
+        <div className="rounded-xl border p-4 mb-4" style={{ background: "#121208", borderColor: "#2a2a12" }}>
+            <div
+                className="rounded-xl border px-4 py-8 mb-4 flex items-center justify-center"
+                style={{ background: "linear-gradient(180deg, rgba(232,255,0,0.05), rgba(232,255,0,0.01))", borderColor: "#2f2b12" }}
+            >
+                <div className="w-14 h-14 rounded-lg flex items-center justify-center" style={{ background: "rgba(232,255,0,0.08)", border: "1px solid rgba(232,255,0,0.16)" }}>
+                    <Wallet className="w-7 h-7" style={{ color: "#e8ff00" }} />
+                </div>
+            </div>
+
+            <p className="text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: "#9b9b63" }}>BitGo Wallet Balance</p>
+            <p className="text-[48px] font-extrabold leading-none mb-3" style={{ color: "#e8ff00" }}>
+                2,450.00 <span className="text-[28px] text-white">USDC</span>
+            </p>
+            <div className="flex items-center gap-2 mb-5">
+                <Shield className="w-3.5 h-3.5" style={{ color: "#e8ff00" }} />
+                <p className="text-[12px] font-medium" style={{ color: "#e8ff00" }}>Protected by MPC Technology</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+                <button
+                    className="py-3 rounded-lg text-[14px] font-bold border-none cursor-pointer flex items-center justify-center gap-2"
+                    style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}
+                >
+                    <Wallet className="w-4 h-4" /> Fund Wallet
+                </button>
+                <button
+                    className="py-3 rounded-lg text-[14px] font-bold border cursor-pointer flex items-center justify-center gap-2"
+                    style={{ background: "#1d2f52", borderColor: "#2f436f", color: "#fff", fontFamily: "inherit" }}
+                >
+                    <Landmark className="w-4 h-4" /> Withdraw
+                </button>
+            </div>
+        </div>
+
+        <div className="mb-4">
+            <p className="text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: "#9b9b63" }}>Your Private Payment Address</p>
+            <div className="rounded-xl border px-4 py-4 flex items-center justify-between" style={{ background: "#121208", borderColor: "#2a2a12" }}>
+                <p className="text-[14px] font-bold" style={{ color: "#e8ff00" }}>0x71C...492E</p>
+                <button className="border-none bg-transparent cursor-pointer" style={{ color: "#e8ff00" }}>
+                    <Copy className="w-4 h-4" />
+                </button>
+            </div>
+        </div>
+
+        <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[18px] font-bold text-white">Payment History</h3>
+            <button
+                type="button"
+                className="text-[12px] font-bold border-none bg-transparent cursor-pointer p-0"
+                style={{ color: "#e8ff00", fontFamily: "inherit" }}
+            >
+                View All
+            </button>
+        </div>
+
+        <div className="flex flex-col gap-3">
+            {PAYMENTS.map((p, i) => {
+                const Icon = p.icon;
+                return (
+                    <div key={i} className="rounded-xl border px-4 py-3 flex items-center gap-3" style={{ background: "#121208", borderColor: "#2a2a12" }}>
+                        <div className="w-10 h-10 rounded-md flex items-center justify-center" style={{ background: "rgba(232,255,0,0.1)", border: "1px solid rgba(232,255,0,0.14)" }}>
+                            <Icon className="w-4 h-4" style={{ color: "#e8ff00" }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-bold text-white truncate">{p.bounty}</p>
+                            <p className="text-[11px]" style={{ color: "#7c8798" }}>{p.date}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[14px] font-bold" style={{ color: "#e8ff00" }}>{p.amount}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#22c55e" }}>{p.status}</p>
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     </div>
 );

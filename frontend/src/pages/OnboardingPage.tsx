@@ -2,13 +2,27 @@ import { useState, type FC, type MouseEvent } from "react";
 import { Info, ExternalLink, ArrowRight, CheckCircle2, Shield, Loader2 } from "lucide-react";
 
 // Navbar layout inside onboarding (so it looks like part of the site)
-const OnboardingNavbar: FC = () => (
+const OnboardingNavbar: FC<{ step: 1 | 2; onBack?: () => void }> = ({ step, onBack }) => (
     <nav className="absolute top-0 left-0 right-0 z-50 border-b border-black/50 bg-[#060606]/95 backdrop-blur">
-        <div className="w-full px-6 md:px-12 flex items-center justify-between" style={{ height: 72 }}>
-            <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">DARKEARN</span>
-            </div>
+        <div className="w-full px-4 md:px-8 flex items-center justify-between" style={{ height: 56 }}>
+            {step === 2 ? (
+                <>
+                    <button
+                        onClick={onBack}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-transparent border-none cursor-pointer"
+                        style={{ color: "#fff", fontFamily: "inherit" }}
+                    >
+                        <ArrowRight className="w-4 h-4" style={{ transform: "rotate(180deg)" }} />
+                    </button>
+                    <span className="font-bold text-white text-[14px]">Onboarding</span>
+                    <div className="w-8 h-8" />
+                </>
+            ) : (
+                <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                    <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">DARKEARN</span>
+                </div>
+            )}
         </div>
     </nav>
 );
@@ -89,7 +103,7 @@ const OnboardingPage: FC = () => {
                }
             `}</style>
 
-            <OnboardingNavbar />
+            <OnboardingNavbar step={step} onBack={() => setStep(1)} />
 
             {/* Background identical to login */}
             <div className="absolute inset-0 bg-grid w-full h-full pointer-events-none z-0" />
@@ -98,7 +112,7 @@ const OnboardingPage: FC = () => {
 
             <div className="relative z-10 w-full flex flex-col flex-1 items-center justify-center pt-28 pb-16 px-6">
                 {/* Centered single-column content area */}
-                <div className="w-full max-w-xl flex flex-col">
+                <div className={`w-full ${step === 2 ? "max-w-6xl" : "max-w-xl"} flex flex-col`}>
 
                     {/* Progress Bar Section */}
                     <div className="mb-8">
@@ -219,77 +233,93 @@ const OnboardingPage: FC = () => {
                         </div>
                     ) : (
                         <div className="flex flex-col">
-                            {/* Title — centered */}
-                            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-10 leading-tight text-center">
-                                Create Your <span style={{ color: "#e8ff00" }}>Profile</span>
-                            </h1>
-
-                            {/* Band Ladder — single column */}
-                            <div className="mb-10">
-                                <div className="flex flex-col gap-5 pl-6 border-l-2 relative" style={{ borderColor: "#1a1a1a" }}>
-                                    {/* Highlight glow line for Band 0 */}
-                                    <div className="absolute left-[-2px] top-0 h-[56px] w-[2px]" style={{ background: "#e8ff00", boxShadow: "0 0 12px #e8ff00" }} />
-
-                                    {/* Band 0 */}
-                                    <div className="relative pl-6 pb-1">
-                                        <div className="absolute left-[-33px] top-1 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center"
-                                            style={{ borderColor: "#e8ff00", background: "#060606", boxShadow: "0 0 10px rgba(232,255,0,0.4)" }}>
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#e8ff00" }} />
-                                        </div>
-                                        <h3 className="font-bold text-[14px]" style={{ color: "#e8ff00" }}>
-                                            Band 0 <span className="font-normal" style={{ color: "#e8ff00" }}>(Current)</span>
-                                        </h3>
-                                        <p className="text-[12px] mt-1 font-medium" style={{ color: "#777" }}>Initial entry point for all new agents.</p>
-                                    </div>
-
-                                    {/* Band 1 */}
-                                    <div className="relative pl-6 pb-1 opacity-70 transition-opacity hover:opacity-100 cursor-default">
-                                        <div className="absolute left-[-33px] top-1 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center"
-                                            style={{ borderColor: "#444", background: "#060606" }}>
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#444" }} />
-                                        </div>
-                                        <h3 className="font-bold text-[14px] text-white">Band 1</h3>
-                                        <p className="text-[12px] mt-1 font-medium" style={{ color: "#777" }}>Unlock with 10 completed bounties.</p>
-                                    </div>
-
-                                    {/* Band 2 */}
-                                    <div className="relative pl-6 pb-1 opacity-55 transition-opacity hover:opacity-100 cursor-default">
-                                        <div className="absolute left-[-33px] top-1 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center"
-                                            style={{ borderColor: "#444", background: "#060606" }}>
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#444" }} />
-                                        </div>
-                                        <h3 className="font-bold text-[14px] text-white">Band 2</h3>
-                                        <p className="text-[12px] mt-1 font-medium" style={{ color: "#777" }}>Requires 50 verified bounty proofs.</p>
-                                    </div>
-
-                                    {/* Band 3 */}
-                                    <div className="relative pl-6 pb-1 opacity-45 transition-opacity hover:opacity-100 cursor-default">
-                                        <div className="absolute left-[-33px] top-1 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center"
-                                            style={{ borderColor: "#444", background: "#060606" }}>
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#444" }} />
-                                        </div>
-                                        <h3 className="font-bold text-[14px] text-white">Band 3</h3>
-                                        <p className="text-[12px] mt-1 font-medium" style={{ color: "#777" }}>Elite status. 100+ bounty threshold.</p>
-                                    </div>
-
-                                    {/* Band 4 (Apex) */}
-                                    <div className="relative pl-6 opacity-35 transition-opacity hover:opacity-100 cursor-default">
-                                        <div className="absolute left-[-33px] top-1 w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center"
-                                            style={{ borderColor: "#444", background: "#060606" }}>
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#444" }} />
-                                        </div>
-                                        <h3 className="font-bold text-[14px] text-white">Band 4 <span className="font-normal" style={{ color: "#888" }}>(Apex)</span></h3>
-                                        <p className="text-[12px] mt-1 font-medium" style={{ color: "#777" }}>Master level. 500+ successful operations.</p>
-                                    </div>
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[12px] font-bold text-white">Profile Creation</span>
+                                    <span className="text-[12px] font-bold text-white">Step 2 of 2</span>
+                                </div>
+                                <div className="w-full h-[4px] rounded-full overflow-hidden" style={{ background: "#1a1a1a" }}>
+                                    <div className="h-full w-full" style={{ background: "#e8ff00" }} />
                                 </div>
                             </div>
 
-                            {/* Mint Button */}
+                            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-10 text-center">
+                                Create Your Profile
+                            </h1>
+
+                            <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-10 items-start min-h-[260px] mb-10">
+                                <div className="flex flex-col gap-6">
+                                    <div className="flex gap-4">
+                                        <div className="relative flex flex-col items-center">
+                                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#e8ff00", boxShadow: "0 0 16px rgba(232,255,0,0.35)" }}>
+                                                <div className="w-3 h-3 rounded-full border-2" style={{ borderColor: "#060606" }} />
+                                            </div>
+                                            <div className="w-px flex-1 mt-2" style={{ background: "#333", minHeight: 28 }} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-[16px]" style={{ color: "#e8ff00" }}>Band 0 (Current)</h3>
+                                            <p className="text-[12px] mt-1 font-medium" style={{ color: "#e8ff00" }}>Initial entry point for all new agents.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <div className="relative flex flex-col items-center">
+                                            <div className="w-8 h-8 rounded-full border flex items-center justify-center" style={{ borderColor: "#555" }}>
+                                                <div className="w-3 h-3 rounded-full border" style={{ borderColor: "#555" }} />
+                                            </div>
+                                            <div className="w-px flex-1 mt-2" style={{ background: "#333", minHeight: 28 }} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-[15px] text-white">Band 1</h3>
+                                            <p className="text-[12px] mt-1 font-medium" style={{ color: "#64748b" }}>Unlock with 10 completed bounties.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <div className="relative flex flex-col items-center">
+                                            <div className="w-8 h-8 rounded-full border flex items-center justify-center" style={{ borderColor: "#555" }}>
+                                                <div className="w-3 h-3 rounded-full border" style={{ borderColor: "#555" }} />
+                                            </div>
+                                            <div className="w-px flex-1 mt-2" style={{ background: "#333", minHeight: 28 }} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-[15px] text-white">Band 2</h3>
+                                            <p className="text-[12px] mt-1 font-medium" style={{ color: "#64748b" }}>Requires 50 verified bounty proofs.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <div className="relative flex flex-col items-center">
+                                            <div className="w-8 h-8 rounded-full border flex items-center justify-center" style={{ borderColor: "#555" }}>
+                                                <div className="w-3 h-3 rounded-full border" style={{ borderColor: "#555" }} />
+                                            </div>
+                                            <div className="w-px flex-1 mt-2" style={{ background: "#333", minHeight: 28 }} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-[15px] text-white">Band 3</h3>
+                                            <p className="text-[12px] mt-1 font-medium" style={{ color: "#64748b" }}>Elite status. 100+ bounty threshold.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <div className="w-8 h-8 rounded-full border flex items-center justify-center" style={{ borderColor: "#555" }}>
+                                            <div className="w-3 h-3 rounded-full border" style={{ borderColor: "#555" }} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-[15px] text-white">Band 4 (Apex)</h3>
+                                            <p className="text-[12px] mt-1 font-medium" style={{ color: "#64748b" }}>Master level. 500+ successful operations.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div />
+                            </div>
+
                             {!isMinted ? (
                                 <button
                                     onClick={handleMint}
                                     disabled={isMinting}
-                                    className="w-full font-bold text-[14px] py-4 rounded-lg transition-all flex items-center justify-center gap-3 uppercase tracking-wider outline-none border-none cursor-pointer"
+                                    className="w-full font-bold text-[14px] py-4 rounded-md transition-all flex items-center justify-center gap-3 uppercase tracking-wider outline-none border-none cursor-pointer mb-4"
                                     style={{
                                         background: "#e8ff00",
                                         color: "#000",
@@ -297,37 +327,34 @@ const OnboardingPage: FC = () => {
                                         boxShadow: "0 0 20px rgba(232,255,0,0.15)",
                                         fontFamily: "inherit"
                                     }}
-                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!isMinting) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(232,255,0,0.25)"; } }}
-                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (!isMinting) { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(232,255,0,0.15)"; } }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!isMinting) { e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.transform = "translateY(0)"; }}
                                 >
                                     {isMinting ? "Generating ZK Proof..." : "Mint My Profile"}
                                     {isMinting && <Loader2 className="w-5 h-5 animate-spin" />}
                                 </button>
                             ) : null}
 
-                            {/* Success State */}
                             {isMinted && (
-                                <div className="verified-msg flex flex-col border p-8 rounded-xl items-center mt-2" style={{ background: "rgba(232,255,0,0.03)", borderColor: "rgba(232,255,0,0.15)" }}>
-                                    <CheckCircle2 className="w-10 h-10 mb-3" style={{ color: "#e8ff00" }} />
+                                <div className="verified-msg flex flex-col border p-8 rounded-lg items-center mt-2" style={{ background: "rgba(232,255,0,0.03)", borderColor: "#2a2a2a" }}>
+                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ background: "rgba(232,255,0,0.1)" }}>
+                                        <CheckCircle2 className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                    </div>
                                     <h3 className="text-[15px] font-bold text-white mb-1">Profile created.</h3>
-                                    <p className="text-[13px] mb-8 text-center" style={{ color: "#999" }}>
-                                        You are now <span className="font-bold" style={{ color: "#e8ff00" }}>{ensName || "alice.eth"}</span> on DarkEarn.
+                                    <p className="text-[13px] mb-8 text-center" style={{ color: "#e8ff00" }}>
+                                        You are now <span className="font-bold">{ensName || "alice.eth"}</span> on DarkEarn.
                                     </p>
 
                                     <div className="flex flex-col gap-3 w-full">
                                         <button
-                                            className="w-full font-bold text-[13px] py-4 rounded-lg uppercase tracking-wider transition-all cursor-pointer border-none"
-                                            style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}
-                                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                            className="w-full font-bold text-[13px] py-3 rounded-sm uppercase tracking-wider transition-all cursor-pointer border-none"
+                                            style={{ background: "#2a2a00", color: "#e8ff00", border: "1px solid #4a4a00", fontFamily: "inherit" }}
                                         >
                                             Browse Bounties
                                         </button>
                                         <button
-                                            className="w-full font-bold text-[13px] py-4 rounded-lg uppercase tracking-wider transition-all cursor-pointer"
-                                            style={{ background: "transparent", color: "#fff", border: "1.5px solid #333", fontFamily: "inherit" }}
-                                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#e8ff00"; e.currentTarget.style.color = "#e8ff00"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.color = "#fff"; e.currentTarget.style.transform = "translateY(0)"; }}
+                                            className="w-full font-bold text-[13px] py-3 rounded-sm uppercase tracking-wider transition-all cursor-pointer"
+                                            style={{ background: "transparent", color: "#60a5fa", border: "1px solid #1f2937", fontFamily: "inherit" }}
                                         >
                                             Post a Bounty
                                         </button>

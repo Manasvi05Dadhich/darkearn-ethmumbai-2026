@@ -1,30 +1,43 @@
 import { useState, type FC, type MouseEvent } from "react";
-import { ChevronDown, Loader2, CheckCircle2, Lock, Copy, Download, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, CheckCircle2, Lock, Copy, Download, ExternalLink, FileText, Settings, Code, Shield } from "lucide-react";
 
-type AppStatus = "anonymous" | "revealed" | "accepted" | "rejected" | "work-submitted" | "completed" | "payment-claimed";
+type IdentityStatus = "anonymous" | "revealed";
+type AppStatus = "under-review" | "accepted" | "pending" | "rejected";
 
 interface Application {
-    id: number; title: string; posterEns: string; prize: string; status: AppStatus;
-    dateApplied: string; applicantNum: number; revealedEns?: string;
+    id: number;
+    title: string;
+    posterEns: string;
+    prize: string;
+    identityStatus: IdentityStatus;
+    appStatus: AppStatus;
+    applicantNum?: number;
+    expandMessage?: string;
+    icon: "document" | "gear" | "braces" | "shield";
 }
 
-const STATUS_COLORS: Record<AppStatus, { bg: string; color: string; label: string }> = {
-    "anonymous": { bg: "#33333330", color: "#999", label: "Anonymous" },
-    "revealed": { bg: "#3b82f620", color: "#60a5fa", label: "Revealed" },
-    "accepted": { bg: "#22c55e20", color: "#22c55e", label: "Accepted" },
-    "rejected": { bg: "#ef444420", color: "#ef4444", label: "Rejected" },
-    "work-submitted": { bg: "#1e40af20", color: "#93c5fd", label: "Work Submitted" },
-    "completed": { bg: "#22c55e20", color: "#22c55e", label: "Completed" },
-    "payment-claimed": { bg: "#a78bfa20", color: "#a78bfa", label: "Payment Claimed" },
+const APPS: Application[] = [
+    { id: 1, title: "Smart Contract Audit", posterEns: "poster.eth", prize: "$1,200 USDC", identityStatus: "revealed", appStatus: "under-review", applicantNum: 7, expandMessage: "You applied as Applicant #7 — your identity was anonymous until the poster revealed you.", icon: "document" },
+    { id: 2, title: "Frontend UI Redesign", posterEns: "design.eth", prize: "$800 USDC", identityStatus: "anonymous", appStatus: "accepted", icon: "gear" },
+    { id: 3, title: "Indexing Subgraph for DAO", posterEns: "grapher.eth", prize: "$2,500 USDC", identityStatus: "anonymous", appStatus: "pending", icon: "braces" },
+    { id: 4, title: "Vulnerability Report", posterEns: "shield.eth", prize: "$400 USDC", identityStatus: "revealed", appStatus: "rejected", icon: "shield" },
+];
+
+const ICON_MAP = {
+    document: FileText,
+    gear: Settings,
+    braces: Code,
+    shield: Shield,
 };
 
-const APPS: Application[] = [
-    { id: 1, title: "Audit Solidity escrow contract", posterEns: "shadowed.eth", prize: "$5,000 USDC", status: "accepted", dateApplied: "Mar 5, 2026", applicantNum: 3, revealedEns: "shadowed.eth" },
-    { id: 2, title: "Build ZK identity module for ENS", posterEns: "vitalik.eth", prize: "$2,400 USDC", status: "anonymous", dateApplied: "Mar 8, 2026", applicantNum: 7 },
-    { id: 3, title: "Frontend integration for reputation NFT", posterEns: "builder.eth", prize: "$1,200 USDC", status: "completed", dateApplied: "Feb 20, 2026", applicantNum: 4, revealedEns: "builder.eth" },
-    { id: 4, title: "Write technical docs for bridge SDK", posterEns: "0xwriter.eth", prize: "$900 USDC", status: "rejected", dateApplied: "Feb 15, 2026", applicantNum: 2 },
-    { id: 5, title: "Design privacy dashboard UI", posterEns: "anon42.eth", prize: "$1,800 USDC", status: "revealed", dateApplied: "Mar 9, 2026", applicantNum: 11 },
-];
+const STATUS_STYLES: Record<AppStatus, { bg: string; color: string }> = {
+    "under-review": { bg: "rgba(59, 130, 246, 0.5)", color: "#fff" },
+    "accepted": { bg: "#22c55e", color: "#fff" },
+    "pending": { bg: "rgba(88, 80, 236, 0.7)", color: "#fff" },
+    "rejected": { bg: "#ef4444", color: "#fff" },
+};
+
+const IDENTITY_STYLE = { bg: "rgba(51, 65, 85, 0.6)", color: "#fff" };
 
 /* ── Submit Work Modal ── */
 const SubmitWorkModal: FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -76,7 +89,7 @@ const ClaimPaymentModal: FC<{ prize: string; onClose: () => void }> = ({ prize, 
             <div className="w-full max-w-md p-8 rounded-xl border" style={{ background: "#0c0c0c", borderColor: "#1a1a1a" }} onClick={e => e.stopPropagation()}>
                 <h2 className="text-lg font-bold text-white mb-1">Receive Your Payment Privately</h2>
                 <p className="text-[12px] mb-6" style={{ color: "#888" }}>Payment goes to a brand new wallet address that cannot be linked to your ENS name.</p>
-                {stage === 1 && <div className="flex items-center gap-2 py-6 justify-center"><Loader2 className="w-5 h-5 animate-spin" style={{ color: "#e8ff00" }} /><span className="text-[12px]" style={{ color: "#888" }}>Generating your one-time payment address...</span></div>}
+                {stage === 1 && <div className="flex items-center justify-center gap-2 py-6"><Loader2 className="w-5 h-5 animate-spin" style={{ color: "#e8ff00" }} /><span className="text-[12px]" style={{ color: "#888" }}>Generating your one-time payment address...</span></div>}
                 {stage >= 2 && (
                     <div>
                         <div className="p-3 rounded-lg mb-3 flex items-center justify-between" style={{ background: "#111", border: "1px solid #1a1a1a" }}>
@@ -97,7 +110,7 @@ const ClaimPaymentModal: FC<{ prize: string; onClose: () => void }> = ({ prize, 
                         </div>
                         {stage === 2 && <button onClick={() => { setStage(3); setTimeout(() => setStage(4), 2000); }}
                             className="w-full py-3.5 rounded-lg text-[13px] font-bold uppercase tracking-wider border-none cursor-pointer" style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}>Send My Payment Here</button>}
-                        {stage === 3 && <div className="flex items-center gap-2 py-4 justify-center"><Loader2 className="w-5 h-5 animate-spin" style={{ color: "#e8ff00" }} /><span className="text-[12px]" style={{ color: "#888" }}>MetaMask approval...</span></div>}
+                        {stage === 3 && <div className="flex items-center justify-center gap-2 py-4"><Loader2 className="w-5 h-5 animate-spin" style={{ color: "#e8ff00" }} /><span className="text-[12px]" style={{ color: "#888" }}>MetaMask approval...</span></div>}
                         {stage >= 4 && (
                             <div className="text-center py-2">
                                 <CheckCircle2 className="w-10 h-10 mx-auto mb-3" style={{ color: "#22c55e" }} />
@@ -115,52 +128,87 @@ const ClaimPaymentModal: FC<{ prize: string; onClose: () => void }> = ({ prize, 
 
 /* ── Applications Tab ── */
 const ApplicationsTab: FC = () => {
-    const [expanded, setExpanded] = useState<number | null>(null);
+    const [expanded, setExpanded] = useState<number | null>(1);
+    const [subTab, setSubTab] = useState<"active" | "completed" | "drafts">("active");
     const [modal, setModal] = useState<"submit" | "claim" | null>(null);
     const [claimPrize, setClaimPrize] = useState("");
 
     return (
-        <div className="max-w-5xl">
-            <div className="rounded-xl border overflow-hidden" style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}>
+        <div className="max-w-2xl mx-auto">
+            {/* Secondary Tabs */}
+            <div className="flex gap-6 mb-6 border-b" style={{ borderColor: "#222" }}>
+                {(["active", "completed", "drafts"] as const).map((t) => (
+                    <button
+                        key={t}
+                        onClick={() => setSubTab(t)}
+                        className="pb-2 text-[13px] font-medium capitalize border-b-2 -mb-px transition-colors"
+                        style={{
+                            color: subTab === t ? "#e8ff00" : "#94a3b8",
+                            borderColor: subTab === t ? "#e8ff00" : "transparent",
+                            fontFamily: "inherit",
+                        }}
+                    >
+                        {t}
+                    </button>
+                ))}
+            </div>
+
+            {/* Application List */}
+            <div className="space-y-1">
                 {APPS.map((app) => {
-                    const s = STATUS_COLORS[app.status];
+                    const IconC = ICON_MAP[app.icon];
+                    const appStyle = STATUS_STYLES[app.appStatus];
                     const isExpanded = expanded === app.id;
                     return (
-                        <div key={app.id} className="border-b" style={{ borderColor: "#111" }}>
-                            <button onClick={() => setExpanded(isExpanded ? null : app.id)}
-                                className="w-full flex items-center gap-4 px-6 py-4 bg-transparent border-none cursor-pointer text-left transition-colors hover:bg-[#0d0d0d]"
-                                style={{ fontFamily: "inherit" }}>
-                                <span className="flex-1 text-[14px] font-semibold text-white">{app.title}</span>
-                                <span className="text-[12px] font-medium hidden sm:block" style={{ color: "#777" }}>{app.posterEns}</span>
-                                <span className="text-[13px] font-bold" style={{ color: "#e8ff00" }}>{app.prize}</span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ background: s.bg, color: s.color }}>{s.label}</span>
-                                <span className="text-[11px] hidden md:block" style={{ color: "#555" }}>{app.dateApplied}</span>
-                                <ChevronDown className="w-4 h-4" style={{ color: "#555", transform: isExpanded ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-                            </button>
-                            {isExpanded && (
-                                <div className="px-6 pb-5 pt-1" style={{ borderTop: "1px solid #111" }}>
-                                    <p className="text-[13px] mb-3" style={{ color: "#888" }}>
-                                        You applied as Applicant #{app.applicantNum} — your identity was anonymous until the poster revealed you.
-                                    </p>
-                                    {app.revealedEns && <p className="text-[13px] mb-3" style={{ color: "#60a5fa" }}>Poster: <span className="font-semibold text-white">{app.revealedEns}</span></p>}
-                                    <div className="flex gap-3 mt-3">
-                                        {app.status === "accepted" && (
-                                            <button onClick={() => setModal("submit")}
-                                                className="px-5 py-2.5 rounded-lg text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer"
-                                                style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}>Submit Work</button>
-                                        )}
-                                        {app.status === "completed" && (
-                                            <button onClick={() => { setClaimPrize(app.prize); setModal("claim"); }}
-                                                className="px-5 py-2.5 rounded-lg text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer"
-                                                style={{ background: "#22c55e", color: "#fff", fontFamily: "inherit" }}>Claim Payment</button>
-                                        )}
+                        <div key={app.id} className="rounded-lg overflow-hidden" style={{ background: "#0a0a0a" }}>
+                            <button
+                                onClick={() => setExpanded(isExpanded ? null : app.id)}
+                                className="w-full flex items-start gap-4 px-4 py-4 bg-transparent border-none cursor-pointer text-left"
+                                style={{ fontFamily: "inherit" }}
+                            >
+                                <div className="w-10 h-10 rounded flex items-center justify-center flex-shrink-0" style={{ background: "rgba(232,255,0,0.15)" }}>
+                                    <IconC className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[14px] font-semibold text-white">{app.title}</p>
+                                    <p className="text-[12px] mt-0.5" style={{ color: "#94a3b8" }}>{app.posterEns} • {app.prize}</p>
+                                    <div className="flex flex-wrap gap-1.5 mt-2">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={IDENTITY_STYLE}>
+                                            {app.identityStatus === "revealed" ? "REVEALED" : "ANONYMOUS"}
+                                        </span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded" style={appStyle}>
+                                            {app.appStatus === "under-review" ? "UNDER REVIEW" : app.appStatus.toUpperCase()}
+                                        </span>
                                     </div>
+                                </div>
+                                {isExpanded ? (
+                                    <ChevronUp className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: "#e8ff00" }} />
+                                ) : (
+                                    <ChevronDown className="w-5 h-5 flex-shrink-0 mt-1" style={{ color: "#94a3b8" }} />
+                                )}
+                            </button>
+                            {isExpanded && app.expandMessage && (
+                                <div className="px-4 pb-4 pt-0">
+                                    <div className="px-3 py-2 rounded" style={{ background: "#e8ff00" }}>
+                                        <p className="text-[12px] font-medium" style={{ color: "#0a0a0a" }}>{app.expandMessage}</p>
+                                    </div>
+                                    {(app.appStatus === "accepted" || app.appStatus === "under-review") && (
+                                        <button onClick={() => setModal("submit")}
+                                            className="mt-3 px-4 py-2 rounded-lg text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer"
+                                            style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}>Submit Work</button>
+                                    )}
+                                    {app.appStatus === "accepted" && (
+                                        <button onClick={() => { setClaimPrize(app.prize); setModal("claim"); }}
+                                            className="mt-3 ml-2 px-4 py-2 rounded-lg text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer"
+                                            style={{ background: "#22c55e", color: "#fff", fontFamily: "inherit" }}>Claim Payment</button>
+                                    )}
                                 </div>
                             )}
                         </div>
                     );
                 })}
             </div>
+
             {modal === "submit" && <SubmitWorkModal onClose={() => setModal(null)} />}
             {modal === "claim" && <ClaimPaymentModal prize={claimPrize} onClose={() => setModal(null)} />}
         </div>

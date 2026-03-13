@@ -1,13 +1,11 @@
-import { useState, type FC, type MouseEvent } from "react";
-import { Send, Loader2, CheckCircle2 } from "lucide-react";
+import { useState, type FC } from "react";
+import { Send, Loader2, CheckCircle2, Box, Network, Cpu, Diamond, SlidersHorizontal, ChevronDown, ArrowLeft, Info, CalendarDays, Shield, Lock, Wallet } from "lucide-react";
 
 const CONTRIBUTORS = [
-    { id: 4721, band: 3, skills: ["Solidity", "Security"], lastActive: "3 days ago", completions: 18 },
-    { id: 1893, band: 2, skills: ["Frontend", "Design"], lastActive: "1 day ago", completions: 9 },
-    { id: 6204, band: 4, skills: ["Solidity", "Cairo"], lastActive: "5 hours ago", completions: 32 },
-    { id: 3517, band: 2, skills: ["Content"], lastActive: "2 days ago", completions: 11 },
-    { id: 8829, band: 3, skills: ["Security", "Solidity"], lastActive: "1 week ago", completions: 21 },
-    { id: 2045, band: 2, skills: ["Design", "Frontend"], lastActive: "4 days ago", completions: 8 },
+    { id: 4721, band: 3, skills: ["Solidity", "Cairo"], lastActive: "3 days ago", completions: 45, icon: Box },
+    { id: 8832, band: 2, skills: ["Rust", "Go"], lastActive: "1 day ago", completions: 122, icon: Network },
+    { id: 1054, band: 4, skills: ["Python", "Vyper"], lastActive: "5 hours ago", completions: 89, icon: Cpu },
+    { id: 2967, band: 1, skills: ["TypeScript"], lastActive: "1 week ago", completions: 12, icon: Diamond },
 ];
 
 const FindContributorsTab: FC = () => {
@@ -16,58 +14,107 @@ const FindContributorsTab: FC = () => {
     const [bidSent, setBidSent] = useState(false);
     const [filterBand, setFilterBand] = useState("all");
     const [filterSkill, setFilterSkill] = useState("all");
+    const [filterLastActive, setFilterLastActive] = useState("all");
 
     const filtered = CONTRIBUTORS.filter(c => {
         if (filterBand !== "all" && c.band !== parseInt(filterBand)) return false;
         if (filterSkill !== "all" && !c.skills.includes(filterSkill)) return false;
+        if (filterLastActive === "today" && !(c.lastActive.includes("hours") || c.lastActive.includes("day"))) return false;
+        if (filterLastActive === "week" && !c.lastActive.includes("week")) return false;
         return true;
     });
 
     const handleSend = () => { setBidSending(true); setTimeout(() => { setBidSending(false); setBidSent(true); }, 2000); };
 
     return (
-        <div className="max-w-5xl">
-            {/* Filters */}
-            <div className="flex items-center gap-4 mb-6 flex-wrap">
-                <select value={filterBand} onChange={e => setFilterBand(e.target.value)}
-                    className="bg-[#0a0a0a] text-white text-[13px] px-4 py-2.5 rounded-lg border outline-none" style={{ borderColor: "#1a1a1a" }}>
-                    <option value="all">All Bands</option>
-                    {[2, 3, 4].map(b => <option key={b} value={b}>Band {b}</option>)}
-                </select>
-                <select value={filterSkill} onChange={e => setFilterSkill(e.target.value)}
-                    className="bg-[#0a0a0a] text-white text-[13px] px-4 py-2.5 rounded-lg border outline-none" style={{ borderColor: "#1a1a1a" }}>
-                    <option value="all">All Skills</option>
-                    {["Solidity", "Cairo", "Frontend", "Security", "Content", "Design"].map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+        <div className="max-w-6xl">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: "#e8ff00", color: "#0a0a0a" }}>
+                        <Send className="w-4 h-4" />
+                    </div>
+                    <h2 className="text-xl font-extrabold italic text-white">DARKEARN</h2>
+                </div>
+                <div className="w-8 h-8 rounded-full border flex items-center justify-center" style={{ borderColor: "#665f00", color: "#e8ff00" }}>
+                    <Send className="w-3.5 h-3.5" />
+                </div>
             </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filtered.map(c => (
-                    <div key={c.id} className="p-6 rounded-xl border transition-colors" style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}>
-                        {/* Abstract Avatar */}
-                        <div className="w-12 h-12 rounded-full mb-4 flex items-center justify-center" style={{
-                            background: `linear-gradient(135deg, hsl(${c.id % 360}, 60%, 30%), hsl(${(c.id * 7) % 360}, 50%, 20%))`,
-                            border: "2px solid #222"
-                        }}>
-                            <div className="w-4 h-4 rounded-sm" style={{ background: `hsl(${(c.id * 3) % 360}, 40%, 50%)`, transform: `rotate(${c.id % 90}deg)` }} />
+            {/* Filters */}
+            <div className="flex items-center gap-3 mb-6 flex-wrap">
+                <div className="relative">
+                    <select value={filterBand} onChange={e => setFilterBand(e.target.value)}
+                        className="appearance-none bg-[#3a3915] text-white text-[12px] font-bold uppercase px-4 pr-9 py-3 rounded border outline-none"
+                        style={{ borderColor: "#57531e", fontFamily: "inherit" }}>
+                        <option value="all">Band</option>
+                        {[1, 2, 3, 4].map(b => <option key={b} value={b}>Band {b}</option>)}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#d4d4aa" }} />
+                </div>
+                <div className="relative">
+                    <select value={filterSkill} onChange={e => setFilterSkill(e.target.value)}
+                        className="appearance-none bg-[#3a3915] text-white text-[12px] font-bold uppercase px-4 pr-9 py-3 rounded border outline-none"
+                        style={{ borderColor: "#57531e", fontFamily: "inherit" }}>
+                        <option value="all">Skills</option>
+                        {["Solidity", "Cairo", "Rust", "Go", "Python", "Vyper", "TypeScript"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#d4d4aa" }} />
+                </div>
+                <div className="relative">
+                    <select value={filterLastActive} onChange={e => setFilterLastActive(e.target.value)}
+                        className="appearance-none bg-[#3a3915] text-white text-[12px] font-bold uppercase px-4 pr-9 py-3 rounded border outline-none"
+                        style={{ borderColor: "#57531e", fontFamily: "inherit" }}>
+                        <option value="all">Last Active</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "#d4d4aa" }} />
+                </div>
+                <button
+                    type="button"
+                    className="w-10 h-10 rounded border-none flex items-center justify-center cursor-pointer"
+                    style={{ background: "#e8ff00", color: "#0a0a0a", fontFamily: "inherit" }}
+                >
+                    <SlidersHorizontal className="w-4 h-4" />
+                </button>
+            </div>
+
+            {/* Directory list */}
+            <div className="flex flex-col gap-4">
+                {filtered.map(c => {
+                    const Icon = c.icon;
+                    return (
+                        <div key={c.id} className="rounded border px-5 py-4 flex items-start justify-between gap-6" style={{ background: "#171707", borderColor: "#2e2b11" }}>
+                            <div className="flex items-start gap-4">
+                                <div className="w-14 h-14 rounded flex items-center justify-center" style={{ background: "linear-gradient(135deg, #7f7a14, #3c3a0f)" }}>
+                                    <Icon className="w-7 h-7" style={{ color: "#e8ff00" }} />
+                                </div>
+                                <div>
+                                    <h3 className="text-[15px] font-extrabold text-white mb-1">Contributor #{c.id}</h3>
+                                    <div className="flex items-center gap-2 flex-wrap mb-2">
+                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#e8ff00", color: "#0a0a0a" }}>BAND {c.band}</span>
+                                        <span className="text-[11px]" style={{ color: "#7c8798" }}>{c.completions} Completions</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap mb-4">
+                                        {c.skills.map(s => (
+                                            <span key={s} className="text-[10px] px-2 py-0.5 rounded-full border" style={{ borderColor: "#7b730f", color: "#e8ff00" }}>
+                                                {s}
+                                            </span>
+                                        ))}
+                                    </div>
+                                    <p className="text-[12px] italic" style={{ color: "#7c8798" }}>
+                                        <span style={{ color: "#22c55e" }}>●</span> Active {c.lastActive}
+                                    </p>
+                                </div>
+                            </div>
+                            <button onClick={() => { setBidModal(c.id); setBidSent(false); }}
+                                className="mt-2 px-5 py-3 rounded text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer whitespace-nowrap"
+                                style={{ background: "#e8ff00", color: "#0a0a0a", fontFamily: "inherit" }}>
+                                Send Private Bid
+                            </button>
                         </div>
-                        <h3 className="text-[14px] font-bold text-white mb-2">Contributor #{c.id}</h3>
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(232,255,0,0.1)", color: "#e8ff00" }}>B{c.band}</span>
-                            {c.skills.map(s => <span key={s} className="text-[10px] font-bold px-2 py-0.5 rounded" style={{ background: "#111", color: "#777" }}>{s}</span>)}
-                        </div>
-                        <p className="text-[11px] mb-1" style={{ color: "#555" }}>Active {c.lastActive}</p>
-                        <p className="text-[11px] mb-4" style={{ color: "#555" }}>{c.completions} completions</p>
-                        <button onClick={() => { setBidModal(c.id); setBidSent(false); }}
-                            className="w-full py-2.5 rounded-lg text-[12px] font-bold uppercase tracking-wider border cursor-pointer bg-transparent transition-colors flex items-center justify-center gap-2"
-                            style={{ borderColor: "#333", color: "#ccc", fontFamily: "inherit" }}
-                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#e8ff00"; e.currentTarget.style.color = "#e8ff00"; }}
-                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.color = "#ccc"; }}>
-                            <Send className="w-3.5 h-3.5" /> Send Private Bid
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Bid Modal */}
@@ -83,18 +130,94 @@ const FindContributorsTab: FC = () => {
                             </div>
                         ) : (
                             <>
-                                <h2 className="text-lg font-bold text-white mb-1">Send Private Bid</h2>
-                                <p className="text-[12px] mb-5" style={{ color: "#888" }}>This bid will be encrypted. Only they can read it.</p>
-                                <div className="flex flex-col gap-4">
-                                    <textarea rows={4} placeholder="Scope of work..." className="w-full bg-[#060606] text-white text-[13px] px-4 py-3 rounded-lg border outline-none" style={{ borderColor: "#1a1a1a", resize: "vertical" }} />
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <input type="number" placeholder="Prize (USDC)" className="bg-[#060606] text-white text-[13px] px-4 py-3 rounded-lg border outline-none" style={{ borderColor: "#1a1a1a" }} />
-                                        <input type="date" className="bg-[#060606] text-white text-[13px] px-4 py-3 rounded-lg border outline-none" style={{ borderColor: "#1a1a1a" }} />
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setBidModal(null)}
+                                            className="w-8 h-8 rounded-lg border-none bg-transparent cursor-pointer flex items-center justify-center"
+                                            style={{ color: "#fff", fontFamily: "inherit" }}
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                        </button>
+                                        <h2 className="text-[22px] font-extrabold text-white">Send Private Bid</h2>
                                     </div>
+                                    <Info className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                </div>
+
+                                <div className="mb-6">
+                                    <span
+                                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-4"
+                                        style={{ background: "rgba(232,255,0,0.12)", color: "#e8ff00" }}
+                                    >
+                                        <span className="w-2 h-2 rounded-full" style={{ background: "#e8ff00" }} />
+                                        Secure Channel
+                                    </span>
+                                    <h3 className="text-[16px] font-extrabold text-white mb-2">Send Private Bid to Contributor #{bidModal}</h3>
+                                    <p className="text-[13px]" style={{ color: "#e8ff00" }}>Direct peer-to-peer encrypted communication.</p>
+                                </div>
+
+                                <div className="flex flex-col gap-5">
+                                    <div>
+                                        <label className="block mb-2 text-[12px] font-bold uppercase tracking-wider text-white">Scope of Work</label>
+                                        <textarea
+                                            rows={5}
+                                            placeholder="Describe the specific tasks, milestones, and deliverables for this private assignment..."
+                                            className="w-full bg-[#121208] text-white text-[14px] px-4 py-4 rounded border outline-none"
+                                            style={{ borderColor: "#4a4816", resize: "vertical", fontFamily: "inherit" }}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-2 text-[12px] font-bold uppercase tracking-wider text-white">Prize Amount</label>
+                                        <div className="flex items-center rounded border overflow-hidden" style={{ borderColor: "#4a4816", background: "#121208" }}>
+                                            <input
+                                                type="number"
+                                                placeholder="0.00"
+                                                className="flex-1 bg-transparent text-white text-[14px] px-4 py-3 outline-none border-none"
+                                                style={{ fontFamily: "inherit" }}
+                                            />
+                                            <div className="px-4 py-3 flex items-center gap-2 border-l" style={{ borderColor: "#4a4816", color: "#e8ff00" }}>
+                                                <span className="text-[12px] font-bold uppercase">USDT</span>
+                                                <Wallet className="w-4 h-4" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-2 text-[12px] font-bold uppercase tracking-wider text-white">Deadline</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                placeholder="dd-mm-yyyy"
+                                                className="w-full bg-[#121208] text-white text-[14px] px-4 py-3 rounded border outline-none"
+                                                style={{ borderColor: "#4a4816", fontFamily: "inherit" }}
+                                            />
+                                            <CalendarDays className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2" style={{ color: "#e8ff00" }} />
+                                        </div>
+                                    </div>
+
+                                    <div className="rounded border p-4" style={{ background: "rgba(232,255,0,0.04)", borderColor: "#4a4816" }}>
+                                        <div className="flex gap-3">
+                                            <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#e8ff00" }} />
+                                            <p className="text-[12px] leading-relaxed" style={{ color: "#e8ff00" }}>
+                                                <span className="font-bold">Security Notice:</span> This bid will be encrypted with the contributor&apos;s public key.
+                                                Only they can decrypt and read the contents of this proposal. Your privacy is cryptographically guaranteed.
+                                            </p>
+                                        </div>
+                                    </div>
+
                                     <button onClick={handleSend} disabled={bidSending}
-                                        className="w-full py-3.5 rounded-lg text-[13px] font-bold uppercase tracking-wider border-none cursor-pointer flex items-center justify-center gap-2"
+                                        className="w-full py-4 rounded-lg text-[14px] font-bold border-none cursor-pointer flex items-center justify-center gap-2"
                                         style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}>
-                                        {bidSending ? <><Loader2 className="w-4 h-4 animate-spin" /> Encrypting...</> : "Send Encrypted Bid"}
+                                        {bidSending ? <><Loader2 className="w-4 h-4 animate-spin" /> Encrypting...</> : <><Shield className="w-4 h-4" /> Send Encrypted Bid</>}
+                                    </button>
+
+                                    <button
+                                        onClick={() => setBidModal(null)}
+                                        className="w-full py-2 text-[13px] font-medium border-none bg-transparent cursor-pointer"
+                                        style={{ color: "#a3a3a3", fontFamily: "inherit" }}
+                                    >
+                                        Cancel
                                     </button>
                                 </div>
                             </>

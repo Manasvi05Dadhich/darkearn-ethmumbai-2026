@@ -1,5 +1,5 @@
-import { useState, type FC, type MouseEvent } from "react";
-import { ChevronDown, Eye, CheckCircle2, Loader2, Shield } from "lucide-react";
+import { useState, type FC } from "react";
+import { ChevronDown, Eye, CheckCircle2, Loader2 } from "lucide-react";
 
 interface Applicant { id: number; band: number; skills: string[]; message: string; revealed: boolean; ensName?: string; accepted: boolean; }
 interface PostedBounty { id: number; title: string; prize: string; status: string; applicants: Applicant[]; deadline: string; }

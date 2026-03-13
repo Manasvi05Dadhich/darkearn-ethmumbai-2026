@@ -1,5 +1,5 @@
 import { useState, type FC, type MouseEvent } from "react";
-import { Eye, EyeOff, ArrowRight, Shield, FileText, Star, Briefcase, TrendingUp, Clock } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Shield, FileText, Star, Briefcase, TrendingUp } from "lucide-react";
 import type { DashboardTab } from "./index";
 
 const ACTIVITY = [

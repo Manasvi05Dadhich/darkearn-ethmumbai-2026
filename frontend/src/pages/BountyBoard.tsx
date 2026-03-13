@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type FC, type MouseEvent } from "react";
 import {
     Shield, Search, ChevronDown, Clock, Users, ShieldCheck,
-    X, Lock, Loader2, CheckCircle2, ExternalLink, ArrowRight
+    X, Lock, Loader2, CheckCircle2, ArrowRight
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────
