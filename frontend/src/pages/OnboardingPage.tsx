@@ -1,7 +1,9 @@
-import { useState, type FC, type MouseEvent } from "react";
+import { useState, useEffect, type FC, type MouseEvent } from "react";
 import { Info, ExternalLink, ArrowRight, CheckCircle2, Shield, Loader2 } from "lucide-react";
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { CONTRACTS } from "../contracts";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-// Navbar layout inside onboarding (so it looks like part of the site)
 const OnboardingNavbar: FC<{ step: 1 | 2; onBack?: () => void }> = ({ step, onBack }) => (
     <nav className="absolute top-0 left-0 right-0 z-50 border-b border-black/50 bg-[#060606]/95 backdrop-blur">
         <div className="w-full px-4 md:px-8 flex items-center justify-between" style={{ height: 56 }}>
@@ -18,10 +20,13 @@ const OnboardingNavbar: FC<{ step: 1 | 2; onBack?: () => void }> = ({ step, onBa
                     <div className="w-8 h-8" />
                 </>
             ) : (
-                <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                    <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">DARKEARN</span>
-                </div>
+                <>
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                        <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">DARKEARN</span>
+                    </div>
+                    <ConnectButton accountStatus="avatar" chainStatus="icon" showBalance={false} />
+                </>
             )}
         </div>
     </nav>
@@ -32,28 +37,51 @@ const OnboardingPage: FC = () => {
     const [ensName, setEnsName] = useState("");
     const [isVerifying, setIsVerifying] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
-    const [isMinting, setIsMinting] = useState(false);
-    const [isMinted, setIsMinted] = useState(false);
+    const [verifyError, setVerifyError] = useState("");
+
+    const { address } = useAccount();
+
+    const { data: existingTokenId } = useReadContract({
+        ...CONTRACTS.ReputationNFT,
+        functionName: "ensToTokenId",
+        args: [ensName],
+        query: { enabled: isVerifying && ensName.includes(".eth") },
+    });
+
+
+    useEffect(() => {
+        if (!isVerifying) return;
+        if (existingTokenId !== undefined) {
+            setIsVerifying(false);
+            if (existingTokenId && BigInt(existingTokenId as bigint) > 0n) {
+                setVerifyError("This ENS name is already registered on DarkEarn.");
+                setIsVerified(false);
+            } else {
+                setIsVerified(true);
+                setVerifyError("");
+            }
+        }
+    }, [existingTokenId, isVerifying]);
 
     const handleVerify = () => {
-        if (!ensName.includes('.eth') && ensName.length > 0) {
+        if (!ensName.includes(".eth")) {
+            setVerifyError("Must be a valid .eth name");
             return;
         }
-        if (ensName) {
-            setIsVerifying(true);
-            setTimeout(() => {
-                setIsVerifying(false);
-                setIsVerified(true);
-            }, 1500);
-        }
+        setVerifyError("");
+        setIsVerifying(true);
     };
+    const { writeContract, data: txHash, isPending: isMinting, error: mintError } = useWriteContract();
+
+    const { isSuccess: isMinted } = useWaitForTransactionReceipt({ hash: txHash });
 
     const handleMint = () => {
-        setIsMinting(true);
-        setTimeout(() => {
-            setIsMinting(false);
-            setIsMinted(true);
-        }, 2000);
+        if (!address) return;
+        writeContract({
+            ...CONTRACTS.ReputationNFT,
+            functionName: "testMint",
+            args: [address, ensName, BigInt(0)],
+        });
     };
 
     return (
@@ -104,17 +132,15 @@ const OnboardingPage: FC = () => {
             `}</style>
 
             <OnboardingNavbar step={step} onBack={() => setStep(1)} />
-
-            {/* Background identical to login */}
             <div className="absolute inset-0 bg-grid w-full h-full pointer-events-none z-0" />
             <div className="absolute inset-0 pointer-events-none z-0"
                 style={{ background: "radial-gradient(circle at 50% 50%, transparent 0%, #060606 80%)" }} />
 
             <div className="relative z-10 w-full flex flex-col flex-1 items-center justify-center pt-28 pb-16 px-6">
-                {/* Centered single-column content area */}
+
                 <div className={`w-full ${step === 2 ? "max-w-6xl" : "max-w-xl"} flex flex-col`}>
 
-                    {/* Progress Bar Section */}
+
                     <div className="mb-8">
                         <div className="flex justify-between items-center mb-3">
                             <span className="font-bold tracking-widest text-[12px] uppercase" style={{ color: "#e8ff00" }}>STEP {step} OF 2</span>
@@ -127,7 +153,7 @@ const OnboardingPage: FC = () => {
 
                     {step === 1 ? (
                         <div className="flex flex-col">
-                            {/* Title & Subtitle */}
+
                             <div className="mb-10">
                                 <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4 leading-tight">
                                     Your Identity on <span style={{ color: "#e8ff00" }}>DarkEarn</span>
@@ -137,7 +163,7 @@ const OnboardingPage: FC = () => {
                                 </p>
                             </div>
 
-                            {/* ENS Input Section */}
+
                             <div className="mb-5 flex flex-col gap-3">
                                 <label className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: "#ccc" }}>ENS NAME</label>
                                 <div className="relative">
@@ -159,16 +185,20 @@ const OnboardingPage: FC = () => {
                                         )}
                                     </div>
                                 </div>
-                                {/* Verified confirmation */}
+
                                 {isVerified && (
                                     <div className="verified-msg flex items-center gap-2 mt-2">
                                         <CheckCircle2 className="w-4 h-4" style={{ color: "#22c55e" }} />
-                                        <span className="text-[13px] font-semibold" style={{ color: "#22c55e" }}>{ensName} verified.</span>
+                                        <span className="text-[13px] font-semibold" style={{ color: "#22c55e" }}>{ensName} available on DarkEarn.</span>
+                                    </div>
+                                )}
+                                {verifyError && (
+                                    <div className="verified-msg flex items-center gap-2 mt-2">
+                                        <span className="text-[13px] font-semibold" style={{ color: "#ef4444" }}>{verifyError}</span>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Verify Button */}
                             <button
                                 onClick={handleVerify}
                                 disabled={isVerified || !ensName || isVerifying}
@@ -183,7 +213,7 @@ const OnboardingPage: FC = () => {
                                 {isVerifying ? "Checking ENS Registry..." : isVerified ? "Verified ✓" : "Verify"}
                             </button>
 
-                            {/* Info Box - Amber ENS Info */}
+
                             {!isVerified && (
                                 <div className="info-box p-5 mb-8 transition-colors">
                                     <div className="flex gap-4">
@@ -210,10 +240,9 @@ const OnboardingPage: FC = () => {
                                 </div>
                             )}
 
-                            {/* Spacer to push Next Step to bottom */}
                             <div className="flex-1" />
 
-                            {/* Next Step Button */}
+
                             <button
                                 onClick={() => setStep(2)}
                                 disabled={!isVerified}
@@ -316,23 +345,30 @@ const OnboardingPage: FC = () => {
                             </div>
 
                             {!isMinted ? (
-                                <button
-                                    onClick={handleMint}
-                                    disabled={isMinting}
-                                    className="w-full font-bold text-[14px] py-4 rounded-md transition-all flex items-center justify-center gap-3 uppercase tracking-wider outline-none border-none cursor-pointer mb-4"
-                                    style={{
-                                        background: "#e8ff00",
-                                        color: "#000",
-                                        cursor: isMinting ? "not-allowed" : "pointer",
-                                        boxShadow: "0 0 20px rgba(232,255,0,0.15)",
-                                        fontFamily: "inherit"
-                                    }}
-                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!isMinting) { e.currentTarget.style.transform = "translateY(-1px)"; } }}
-                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.transform = "translateY(0)"; }}
-                                >
-                                    {isMinting ? "Generating ZK Proof..." : "Mint My Profile"}
-                                    {isMinting && <Loader2 className="w-5 h-5 animate-spin" />}
-                                </button>
+                                <>
+                                    <button
+                                        onClick={handleMint}
+                                        disabled={isMinting}
+                                        className="w-full font-bold text-[14px] py-4 rounded-md transition-all flex items-center justify-center gap-3 uppercase tracking-wider outline-none border-none cursor-pointer mb-4"
+                                        style={{
+                                            background: "#e8ff00",
+                                            color: "#000",
+                                            cursor: isMinting ? "not-allowed" : "pointer",
+                                            boxShadow: "0 0 20px rgba(232,255,0,0.15)",
+                                            fontFamily: "inherit"
+                                        }}
+                                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!isMinting) { e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                                        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                                    >
+                                        {isMinting ? "Confirm in Wallet..." : "Mint My Profile"}
+                                        {isMinting && <Loader2 className="w-5 h-5 animate-spin" />}
+                                    </button>
+                                    {mintError && (
+                                        <p className="text-[12px] text-center mb-4" style={{ color: "#ef4444" }}>
+                                            {mintError.message?.includes("NotContractOwner") ? "Only contract owner can testMint. Use the real mint() with a ZK proof." : mintError.message?.slice(0, 100)}
+                                        </p>
+                                    )}
+                                </>
                             ) : null}
 
                             {isMinted && (

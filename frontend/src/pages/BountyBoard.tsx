@@ -1,10 +1,14 @@
-import { useState, useEffect, useRef, type FC, type MouseEvent } from "react";
+import { useState, useEffect, useRef, useMemo, type FC, type MouseEvent } from "react";
 import {
     Shield, Search, ChevronDown, Clock, Users, ShieldCheck,
     X, Lock, Loader2, CheckCircle2, ArrowRight
 } from "lucide-react";
+import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { CONTRACTS } from "../contracts";
+import { formatEther } from "viem";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-// ── Types ──────────────────────────────────────────────────────
+
 interface Bounty {
     id: number;
     title: string;
@@ -28,288 +32,6 @@ type Category = "All" | "Solidity" | "Cairo" | "Frontend" | "Security" | "Conten
 type SortOption = "newest" | "highest" | "deadline";
 type StatusFilter = "open" | "all";
 
-// ── Mock Data ──────────────────────────────────────────────────
-const BOUNTIES: Bounty[] = [
-    {
-        id: 1,
-        title: "Build a ZK identity verification module for ENS",
-        description: "We need a Solidity-based module that integrates with ENS to provide zero-knowledge identity verification. Must use Semaphore or similar ZK framework.",
-        fullDescription: `We're looking for an experienced Solidity developer to build a zero-knowledge identity verification module that integrates seamlessly with ENS (Ethereum Name Service).
-
-**Requirements:**
-- Build a Solidity smart contract that verifies ENS ownership without revealing the owner's address
-- Integrate with Semaphore or a comparable ZK framework for proof generation
-- Create a verification circuit that proves ENS ownership
-- Write comprehensive test coverage (minimum 90%)
-- Gas-optimized deployment on Ethereum mainnet
-
-**Deliverables:**
-1. Smart contract source code with full NatSpec documentation
-2. ZK circuit implementation
-3. Test suite with >90% coverage
-4. Deployment scripts for mainnet/testnet
-5. Technical documentation
-
-**Timeline:** 2 weeks from acceptance
-
-The contract will be audited by a third-party security firm before deployment. You will be expected to address any findings from the audit.`,
-        prize: "$2,400",
-        prizeNum: 2400,
-        currency: "USDC",
-        category: "Solidity",
-        categoryColor: "#627eea",
-        posterEns: "vitalik.eth",
-        posterAvatar: "V",
-        deadline: "12d left",
-        deadlineDate: "March 22, 2026 at 23:59 UTC",
-        applicants: 7,
-        hasPrivateBrief: true,
-        status: "open"
-    },
-    {
-        id: 2,
-        title: "Design privacy-first dashboard UI for DeFi protocol",
-        description: "Create a stunning, modern dashboard that prioritizes user privacy. Dark theme, data visualization, and responsive design required.",
-        fullDescription: `We need a world-class UI/UX designer to create a privacy-first dashboard for our DeFi protocol.
-
-**Scope:**
-- Design a comprehensive dashboard with portfolio overview, transaction history, and yield tracking
-- All financial data should have toggle-able privacy modes (blur/hide amounts)
-- Dark theme with accent colors (our brand color is #e8ff00)
-- Responsive design for desktop, tablet, and mobile
-- Interactive data visualizations (charts, graphs)
-
-**Deliverables:**
-1. Figma file with all screens and components
-2. Design system with tokens, spacing, typography
-3. Interactive prototype
-4. Developer handoff documentation
-5. Asset exports (SVG/PNG)
-
-We want this to feel like the most premium DeFi dashboard ever built. Think Bloomberg Terminal meets modern Web3.`,
-        prize: "$1,800",
-        prizeNum: 1800,
-        currency: "USDC",
-        category: "Design",
-        categoryColor: "#f472b6",
-        posterEns: "anon42.eth",
-        posterAvatar: "A",
-        deadline: "5d left",
-        deadlineDate: "March 15, 2026 at 23:59 UTC",
-        applicants: 14,
-        hasPrivateBrief: false,
-        status: "open"
-    },
-    {
-        id: 3,
-        title: "Audit Solidity escrow contract — critical scope",
-        description: "Security audit of our escrow smart contract handling up to $1M in value. Previous audit experience required. Must follow OWASP guidelines.",
-        fullDescription: `We require a thorough security audit of our Solidity escrow contract that handles significant value transfers.
-
-**Contract Details:**
-- ~800 lines of Solidity code
-- Handles USDC, USDT, and ETH escrow
-- Multi-party dispute resolution mechanism
-- Time-locked releases with emergency provisions
-
-**Audit Requirements:**
-- Full line-by-line code review
-- Automated analysis (Slither, Mythril, Echidna)
-- Manual testing of edge cases
-- Gas optimization recommendations
-- Formal verification of critical paths
-
-**Deliverables:**
-1. Comprehensive audit report (PDF)
-2. Severity classification of all findings (Critical/High/Medium/Low/Informational)
-3. Remediation recommendations
-4. Re-audit of fixed issues (1 round)
-
-Previous audit experience with escrow/payment contracts is mandatory. Please include links to past audit reports in your application.`,
-        prize: "$5,000",
-        prizeNum: 5000,
-        currency: "USDC",
-        category: "Security",
-        categoryColor: "#f97316",
-        posterEns: "shadowed.eth",
-        posterAvatar: "S",
-        deadline: "3d left",
-        deadlineDate: "March 13, 2026 at 23:59 UTC",
-        applicants: 3,
-        hasPrivateBrief: true,
-        status: "open"
-    },
-    {
-        id: 4,
-        title: "Write technical docs for cross-chain bridge SDK",
-        description: "Comprehensive developer documentation for our bridge SDK. Must include quickstart guides, API reference, and code examples in JS/TS.",
-        fullDescription: `Create comprehensive technical documentation for our cross-chain bridge SDK.
-
-**Scope:**
-- Getting Started / Quickstart guide
-- Full API reference documentation
-- Code examples in JavaScript and TypeScript
-- Architecture overview with diagrams
-- Troubleshooting guide
-- Migration guide from v1 to v2
-
-**Requirements:**
-- Experience writing developer documentation
-- Understanding of cross-chain bridges and messaging protocols
-- Familiarity with JavaScript/TypeScript
-- Ability to write clear, concise technical prose
-
-**Deliverables:**
-1. Markdown documentation files (compatible with Docusaurus)
-2. Code examples (tested and working)
-3. Architecture diagrams (Mermaid or similar)
-4. Changelog documentation`,
-        prize: "$900",
-        prizeNum: 900,
-        currency: "USDC",
-        category: "Content",
-        categoryColor: "#a78bfa",
-        posterEns: "0xwriter.eth",
-        posterAvatar: "0",
-        deadline: "20d left",
-        deadlineDate: "March 30, 2026 at 23:59 UTC",
-        applicants: 9,
-        hasPrivateBrief: false,
-        status: "open"
-    },
-    {
-        id: 5,
-        title: "Develop Cairo smart contract for StarkNet DEX",
-        description: "Build an AMM-style DEX contract in Cairo for StarkNet. Must support multi-token swaps, liquidity pools, and fee distribution.",
-        fullDescription: `We're building a decentralized exchange on StarkNet and need an experienced Cairo developer to write the core smart contracts.
-
-**Requirements:**
-- AMM (Automated Market Maker) implementation in Cairo
-- Multi-token swap support
-- Liquidity pool management (add/remove liquidity)
-- Fee distribution mechanism
-- Admin controls with timelock
-
-**Technical Specs:**
-- Cairo 1.0+ syntax
-- Compatible with StarkNet mainnet
-- Gas-optimized for StarkNet's fee model
-- Full test coverage using Protostar or similar framework
-
-**Deliverables:**
-1. Cairo smart contract source code
-2. Test suite
-3. Deployment scripts
-4. Technical documentation
-5. Integration guide for frontend developers`,
-        prize: "$3,200",
-        prizeNum: 3200,
-        currency: "USDC",
-        category: "Cairo",
-        categoryColor: "#06b6d4",
-        posterEns: "stark.eth",
-        posterAvatar: "⚡",
-        deadline: "8d left",
-        deadlineDate: "March 18, 2026 at 23:59 UTC",
-        applicants: 5,
-        hasPrivateBrief: true,
-        status: "open"
-    },
-    {
-        id: 6,
-        title: "Frontend integration for on-chain reputation NFT",
-        description: "Build React components for minting, displaying, and verifying on-chain reputation NFTs. Must integrate with wagmi and RainbowKit.",
-        fullDescription: `We need a React frontend developer to build the user interface for our on-chain reputation NFT system.
-
-**Components Needed:**
-- NFT minting flow with MetaMask integration
-- Reputation badge display component
-- Verification widget (can be embedded on external sites)
-- Profile page showing reputation history
-- Leaderboard component
-
-**Tech Stack:**
-- React 18+ with TypeScript
-- wagmi v2 for wallet interactions
-- RainbowKit for wallet connection UI
-- Vite for bundling
-- TailwindCSS for styling
-
-**Deliverables:**
-1. React component library (published to npm)
-2. Storybook documentation
-3. Integration examples
-4. Unit and integration tests`,
-        prize: "$1,200",
-        prizeNum: 1200,
-        currency: "USDC",
-        category: "Frontend",
-        categoryColor: "#22c55e",
-        posterEns: "builder.eth",
-        posterAvatar: "B",
-        deadline: "15d left",
-        deadlineDate: "March 25, 2026 at 23:59 UTC",
-        applicants: 11,
-        hasPrivateBrief: false,
-        status: "open"
-    },
-    {
-        id: 7,
-        title: "Smart contract for privacy-preserving voting system",
-        description: "Design and implement a Solidity-based voting system using ZK proofs. Voters must remain anonymous while votes are verifiable.",
-        fullDescription: `Build a privacy-preserving voting system smart contract using zero-knowledge proofs.
-
-**Requirements:**
-- Anonymous voting using ZK-SNARKs
-- Verifiable vote tallying
-- Support for multiple proposal types
-- Delegation mechanism
-- Time-bounded voting periods
-
-This is a research-grade implementation. Academic rigor is expected.`,
-        prize: "$4,500",
-        prizeNum: 4500,
-        currency: "USDC",
-        category: "Solidity",
-        categoryColor: "#627eea",
-        posterEns: "dao-lead.eth",
-        posterAvatar: "D",
-        deadline: "10d left",
-        deadlineDate: "March 20, 2026 at 23:59 UTC",
-        applicants: 6,
-        hasPrivateBrief: true,
-        status: "open"
-    },
-    {
-        id: 8,
-        title: "Create brand identity and marketing assets for DeFi launch",
-        description: "Full brand identity package including logo, color palette, typography, social media templates, and pitch deck design for protocol launch.",
-        fullDescription: `We're launching a new DeFi protocol and need a complete brand identity package.
-
-**Deliverables:**
-- Logo (primary, secondary, icon versions)
-- Color palette and typography guidelines
-- Social media templates (Twitter, Discord banners)
-- Pitch deck template (20 slides)
-- Brand guidelines document
-- Marketing one-pager
-
-The aesthetic should convey trust, innovation, and privacy. Dark themes preferred.`,
-        prize: "$2,000",
-        prizeNum: 2000,
-        currency: "USDC",
-        category: "Design",
-        categoryColor: "#f472b6",
-        posterEns: "protocol.eth",
-        posterAvatar: "P",
-        deadline: "18d left",
-        deadlineDate: "March 28, 2026 at 23:59 UTC",
-        applicants: 19,
-        hasPrivateBrief: false,
-        status: "open"
-    },
-];
-
 const CATEGORIES: Category[] = ["All", "Solidity", "Cairo", "Frontend", "Security", "Content", "Design"];
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -320,6 +42,43 @@ const CATEGORY_COLORS: Record<string, string> = {
     Content: "#a78bfa",
     Design: "#f472b6",
 };
+
+const CATEGORY_MAP: Record<number, string> = {
+    0: "Solidity",
+    1: "Cairo",
+    2: "Frontend",
+    3: "Security",
+    4: "Content",
+    5: "Design",
+};
+
+const STATUS_MAP: Record<number, "open" | "closed"> = {
+    0: "open",    // Open
+    1: "closed",  // Assigned
+    2: "closed",  // Completed
+    3: "closed",  // Cancelled
+    4: "closed",  // Disputed
+};
+
+function formatDeadline(timestamp: bigint): string {
+    const date = new Date(Number(timestamp) * 1000);
+    const now = new Date();
+    const diff = date.getTime() - now.getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    if (days < 0) return "Expired";
+    if (days === 0) return "Today";
+    if (days === 1) return "1 day left";
+    return `${days} days left`;
+}
+
+function formatDeadlineDate(timestamp: bigint): string {
+    return new Date(Number(timestamp) * 1000).toLocaleDateString("en-US", {
+        year: "numeric", month: "short", day: "numeric"
+    });
+}
+
+
+
 
 // ── BountyBoardNavbar ──────────────────────────────────────────
 const BountyBoardNavbar: FC<{
@@ -512,22 +271,40 @@ const BountyDetailPanel: FC<{
     isOpen: boolean;
     onClose: () => void;
 }> = ({ bounty, isOpen, onClose }) => {
-    const [applyState, setApplyState] = useState<"idle" | "spinning" | "metamask" | "success">("idle");
+    const [applyState, setApplyState] = useState<"idle" | "pending" | "success" | "error">("idle");
+    const [applyMessage, setApplyMessage] = useState("");
     const panelRef = useRef<HTMLDivElement>(null);
+    const { address } = useAccount();
 
     // Reset state when bounty changes
     useEffect(() => {
         setApplyState("idle");
+        setApplyMessage("");
     }, [bounty?.id]);
 
+    // Real contract write for applying
+    const { writeContract, data: applyTxHash, isPending, error: applyError } = useWriteContract();
+    const { isSuccess: applyConfirmed } = useWaitForTransactionReceipt({ hash: applyTxHash });
+
+    useEffect(() => {
+        if (isPending) setApplyState("pending");
+    }, [isPending]);
+
+    useEffect(() => {
+        if (applyConfirmed) setApplyState("success");
+    }, [applyConfirmed]);
+
+    useEffect(() => {
+        if (applyError) setApplyState("error");
+    }, [applyError]);
+
     const handleApply = () => {
-        setApplyState("spinning");
-        setTimeout(() => {
-            setApplyState("metamask");
-            setTimeout(() => {
-                setApplyState("success");
-            }, 1500);
-        }, 2000);
+        if (!bounty || !address) return;
+        writeContract({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "applyToBounty",
+            args: [BigInt(bounty.id), bounty.posterEns || "anon", applyMessage || "I'd like to work on this bounty."],
+        });
     };
 
     if (!bounty) return null;
@@ -674,8 +451,8 @@ const BountyDetailPanel: FC<{
                             onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 30px rgba(232,255,0,0.25)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
                             onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 20px rgba(232,255,0,0.1)"; e.currentTarget.style.transform = "translateY(0)"; } }}
                         >
-                            {applyState === "spinning" && <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>}
-                            {applyState === "metamask" && <><Loader2 className="w-5 h-5 animate-spin" /> Confirm in MetaMask...</>}
+                            {applyState === "pending" && <><Loader2 className="w-5 h-5 animate-spin" /> Confirm in Wallet...</>}
+                            {applyState === "error" && <>Transaction Failed — Try Again</>}
                             {applyState === "idle" && <>Apply to this Bounty <ArrowRight className="w-4 h-4" /></>}
                         </button>
                     )}
@@ -726,9 +503,70 @@ const BountyBoard: FC = () => {
         setIsPanelOpen(false);
     };
 
+    // Read bounty count from contract
+    const { data: nextId } = useReadContract({
+        ...CONTRACTS.BountyEscrow,
+        functionName: "nextBountyId",
+    });
+
+    const bountyCount = nextId ? Number(nextId as bigint) - 1 : 0;
+    const bountyIds = Array.from({ length: bountyCount }, (_, i) => i + 1);
+
+    // Batch-read all bounty core data
+    const { data: coreResults, isLoading: coreLoading } = useReadContracts({
+        contracts: bountyIds.map((id) => ({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "getBountyCore" as const,
+            args: [BigInt(id)],
+        })),
+    });
+
+    // Batch-read all bounty meta data
+    const { data: metaResults } = useReadContracts({
+        contracts: bountyIds.map((id) => ({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "getBountyMeta" as const,
+            args: [BigInt(id)],
+        })),
+    });
+
+    // Map on-chain data to UI Bounty interface
+    const allBounties: Bounty[] = useMemo(() => {
+        if (!coreResults) return [];
+        return bountyIds.map((id, i) => {
+            const core = coreResults[i]?.result as [bigint, string, string, string, bigint, bigint, bigint, number] | undefined;
+            const meta = metaResults?.[i]?.result as [string, boolean, boolean, bigint, bigint, string] | undefined;
+            if (!core) return null;
+
+            const [, , posterENS, title, categoryId, deadline, prizeAmount, status] = core;
+            const applicantCount = meta ? Number(meta[3]) : 0;
+            const category = CATEGORY_MAP[Number(categoryId)] || "Solidity";
+            const prizeNum = Number(formatEther(prizeAmount));
+
+            return {
+                id,
+                title: title || `Bounty #${id}`,
+                description: title || "No description provided.",
+                fullDescription: title || "No description provided.",
+                prize: prizeNum > 0 ? `$${prizeNum.toLocaleString()}` : "TBD",
+                prizeNum,
+                currency: "ETH",
+                category,
+                categoryColor: CATEGORY_COLORS[category] || "#627eea",
+                posterEns: posterENS || "anon.eth",
+                posterAvatar: (posterENS || "A")[0].toUpperCase(),
+                deadline: formatDeadline(deadline),
+                deadlineDate: formatDeadlineDate(deadline),
+                applicants: applicantCount,
+                hasPrivateBrief: false,
+                status: STATUS_MAP[status] || "open",
+            } as Bounty;
+        }).filter(Boolean) as Bounty[];
+    }, [coreResults, metaResults, bountyIds]);
+
     // Filter & sort bounties
-    const filteredBounties = BOUNTIES
-        .filter((b) => {
+    const filteredBounties = allBounties
+        .filter((b: Bounty) => {
             if (statusFilter === "open" && b.status !== "open") return false;
             if (activeCategory !== "All" && b.category !== activeCategory) return false;
             if (searchQuery) {
@@ -737,9 +575,9 @@ const BountyBoard: FC = () => {
             }
             return true;
         })
-        .sort((a, b) => {
+        .sort((a: Bounty, b: Bounty) => {
             if (sortBy === "highest") return b.prizeNum - a.prizeNum;
-            if (sortBy === "deadline") return parseInt(a.deadline) - parseInt(b.deadline);
+            if (sortBy === "deadline") return a.id - b.id;
             return b.id - a.id; // newest
         });
 
@@ -878,7 +716,12 @@ const BountyBoard: FC = () => {
                         </div>
                     </div>
 
-                    {filteredBounties.length > 0 ? (
+                    {coreLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: "#e8ff00" }} />
+                            <p className="text-[13px]" style={{ color: "#777" }}>Loading bounties from Base Sepolia...</p>
+                        </div>
+                    ) : filteredBounties.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {filteredBounties.map((bounty) => (
                                 <BountyCard key={bounty.id} bounty={bounty} onClick={() => openBounty(bounty)} />
