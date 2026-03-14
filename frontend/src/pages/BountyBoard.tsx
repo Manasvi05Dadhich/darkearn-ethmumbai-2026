@@ -3,7 +3,7 @@ import {
     Shield, Search, ChevronDown, Clock, Users, ShieldCheck,
     X, Lock, Loader2, CheckCircle2, ArrowRight
 } from "lucide-react";
-import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
+import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount, useDisconnect } from "wagmi";
 import { CONTRACTS } from "../contracts";
 import { formatEther } from "viem";
 import { saveApplication } from "../hooks/useMyApplications";
@@ -669,9 +669,18 @@ const BountyBoard: FC = () => {
         deadline: "Deadline Soon",
     };
 
+    const { disconnect } = useDisconnect();
+
     const handleNavigate = (page: string) => {
+        if (page === "disconnect") {
+            disconnect();
+            return;
+        }
+        if (page === "dashboard") {
+            window.location.href = "/dashboard";
+            return;
+        }
         console.log(`Navigate to: ${page}`);
-        // In a real app, this would use a router
     };
 
     return (
