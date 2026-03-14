@@ -71,7 +71,7 @@ const DashboardPage: FC = () => {
         : "—";
     const isBidInboxView = activeTab === "bid-inbox";
     const isEarningsView = activeTab === "earnings";
-    const [bidInboxDecrypted, setBidInboxDecrypted] = useState(false);
+    const [bidInboxDecrypted, _setBidInboxDecrypted] = useState(false);
 
     const renderTab = () => {
         switch (activeTab) {

@@ -18,26 +18,12 @@ interface Feature {
   desc: string;
 }
 
-interface NavbarProps {
-  onConnect: () => void;
-}
-
 interface BountyCardProps {
   title: string;
   prize: string;
   tags: string[];
   deadline: string;
   apps: number;
-}
-
-interface ConnectWalletModalProps {
-  onClose: () => void;
-}
-
-interface Wallet {
-  id: string;
-  name: string;
-  icon: string;
 }
 
 // ── Data ─────────────────────────────────────────────────────
@@ -54,13 +40,6 @@ const FEATURES: Feature[] = [
   { icon: <Lock className="w-6 h-6 mx-auto mb-2" style={{ color: "#e8ff00" }} />, title: "EARNINGS HIDDEN", desc: "Financial flows are obfuscated using zero-knowledge protocols. Only you know your worth." },
   { icon: <Shield className="w-6 h-6 mx-auto mb-2" style={{ color: "#e8ff00" }} />, title: "WALLET PRIVATE", desc: "Decouple your professional identity from your personal assets. Secure and untraceable." },
   { icon: <EyeOff className="w-6 h-6 mx-auto mb-2" style={{ color: "#e8ff00" }} />, title: "WORK CONFIDENTIAL", desc: "Build your reputation without exposing your history. Anonymity is the ultimate utility." },
-];
-
-const WALLETS: Wallet[] = [
-  { id: "metamask", name: "MetaMask", icon: "🦊" },
-  { id: "wc", name: "WalletConnect", icon: "🔗" },
-  { id: "coinbase", name: "Coinbase Wallet", icon: "🔵" },
-  { id: "rainbow", name: "Rainbow", icon: "🌈" },
 ];
 
 // ── Navbar ───────────────────────────────────────────────────
@@ -93,53 +72,6 @@ const BountyCard: FC<BountyCardProps> = ({ title, prize, tags, deadline, apps })
     </div>
     <div className="flex justify-between items-center">
       <span style={{ color: "#444", fontSize: 11 }}>{apps} applicants</span>
-    </div>
-  </div>
-);
-
-const ConnectWalletModal: FC<ConnectWalletModalProps> = ({ onClose }) => (
-  <div
-    className="fixed inset-0 z-50 flex items-center justify-center p-6"
-    style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(4px)" }}
-    onClick={onClose}
-  >
-    <div
-      className="w-full max-w-sm p-8 rounded-lg"
-      style={{ background: "#111", border: "1px solid #222" }}
-      onClick={(e: MouseEvent<HTMLDivElement>) => e.stopPropagation()}
-    >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-bold text-white tracking-widest text-[13px]">CONNECT WALLET</h2>
-        <button
-          onClick={onClose}
-          style={{ background: "none", border: "none", color: "#555", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
-        >✕</button>
-      </div>
-
-      <p className="text-xs mb-6 leading-relaxed" style={{ color: "#888" }}>
-        Connect a wallet to access the board and start earning privately.
-      </p>
-
-      <div className="flex flex-col gap-2 mb-6">
-        {WALLETS.map((w: Wallet) => (
-          <button
-            key={w.id}
-            className="flex items-center gap-3 px-4 py-3.5 text-left w-full transition-colors rounded-md"
-            style={{ background: "#060606", border: "1px solid #1a1a1a", cursor: "pointer", fontFamily: "inherit" }}
-            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#e8ff00"; }}
-            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#1a1a1a"; }}
-          >
-            <span style={{ fontSize: 18 }}>{w.icon}</span>
-            <span className="flex-1 text-white text-[13px] font-medium tracking-wide">{w.name}</span>
-            <span style={{ color: "#555", fontSize: 12 }}>→</span>
-          </button>
-        ))}
-      </div>
-
-      <p className="text-center" style={{ color: "#555", fontSize: 11 }}>
-        By connecting, you agree to our{" "}
-        <a href="#" style={{ color: "#777", textDecoration: "underline" }}>Terms of Service</a>.
-      </p>
     </div>
   </div>
 );

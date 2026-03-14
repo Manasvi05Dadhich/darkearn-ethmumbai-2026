@@ -113,7 +113,7 @@ const ProfileTab: FC = () => {
                                         className="w-10 h-10 rounded flex items-center justify-center"
                                         style={{ background: "rgba(232,255,0,0.1)" }}
                                     >
-                                        <Icon className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                        <Icon className="w-5 h-5 text-[#e8ff00]" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-[13px] font-semibold text-white">{category}</p>

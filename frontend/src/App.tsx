@@ -4,7 +4,6 @@ import { Toaster } from "sonner";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import BountyBoard from "./pages/BountyBoard";
-import DashboardPage from "./pages/dashboard/index";
 import PublicProfile from "./pages/PublicProfile";
 import HowItWorks from "./pages/HowItWorks";
 import { useReputationNFT } from "./hooks/useReputationNFT";
@@ -43,7 +42,6 @@ function AppContent() {
             {activePage === "login" && <LoginPage />}
             {activePage === "onboarding" && <OnboardingPage />}
             {activePage === "bounties" && <BountyBoard />}
-            {activePage === "dashboard" && <DashboardPage />}
         </>
     );
 }

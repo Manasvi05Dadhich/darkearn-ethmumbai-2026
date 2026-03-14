@@ -6,7 +6,6 @@ import {
 import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { CONTRACTS } from "../contracts";
 import { formatEther } from "viem";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { saveApplication } from "../hooks/useMyApplications";
 import { useUserNFT } from "../hooks/useUserNFT";
 import { toast } from "sonner";

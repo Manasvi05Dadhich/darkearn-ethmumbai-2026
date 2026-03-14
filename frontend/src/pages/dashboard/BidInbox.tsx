@@ -124,7 +124,7 @@ const BidInboxTab: FC = () => {
                 </div>
             ) : (
                 <div className="flex flex-col gap-3">
-                    {bids.map((bid, i) => (
+                    {bids.map((bid, _i) => (
                         <div
                             key={bid.txHash}
                             className="rounded-lg border p-4"

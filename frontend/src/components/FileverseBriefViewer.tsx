@@ -29,9 +29,9 @@ const FileverseBriefViewer: FC<BriefViewerProps> = ({ cid, onClose }) => {
 
     const { signMessage, isPending: signing } = useSignMessage({
         mutation: {
-            onSuccess: (sig) => {
+            onSuccess: async (sig) => {
                 try {
-                    const encrypted = fetchEncryptedDocument(cid);
+                    const encrypted = await fetchEncryptedDocument(cid);
                     if (!encrypted) {
                         setError("Document not found. It may have been deleted or the CID is invalid.");
                         setDecrypting(false);

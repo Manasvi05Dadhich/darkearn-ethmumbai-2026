@@ -60,11 +60,11 @@ const MyPostedBountiesTab: FC = () => {
 
     // Reveal applicant on-chain
     const { writeContract: revealWrite, data: revealTx, isPending: revealing } = useWriteContract();
-    const { isSuccess: revealConfirmed } = useWaitForTransactionReceipt({ hash: revealTx });
+    const { isSuccess: _revealConfirmed } = useWaitForTransactionReceipt({ hash: revealTx });
 
     // Accept applicant on-chain
-    const { writeContract: acceptWrite, data: acceptTx, isPending: accepting } = useWriteContract();
-    const { isSuccess: acceptConfirmed } = useWaitForTransactionReceipt({ hash: acceptTx });
+    const { writeContract: _acceptWrite, data: acceptTx, isPending: _accepting } = useWriteContract();
+    const { isSuccess: _acceptConfirmed } = useWaitForTransactionReceipt({ hash: acceptTx });
 
     const handleReveal = (bountyId: number, appId: number) => {
         revealWrite({
@@ -72,11 +72,6 @@ const MyPostedBountiesTab: FC = () => {
             functionName: "revealApplicant",
             args: [BigInt(bountyId), BigInt(appId)],
         });
-    };
-
-    const handleAccept = (_bountyId: number, _appId: number) => {
-        // acceptApplication needs the applicant's address, which we don't have yet
-        // This would need the revealed applicant address from the getApplicant call
     };
 
     if (!address) {
