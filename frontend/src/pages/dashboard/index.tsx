@@ -18,11 +18,12 @@ import PaymentsTab from "./Payments";
 import SettingsTab from "./Settings";
 import ProfileTab from "./Profile";
 import BountiesTab from "./Bounties";
+import ClaimPaymentTab from "./ClaimPayment";
 
 export type DashboardTab =
     | "overview" | "bounties" | "applications" | "bid-inbox"
     | "reputation" | "skills" | "earnings"
-    | "post-bounty" | "my-posted" | "find-contributors" | "payments" | "settings" | "profile" | "wallet";
+    | "post-bounty" | "my-posted" | "find-contributors" | "payments" | "settings" | "profile" | "wallet" | "claim-payment";
 
 interface NavItem {
     id: DashboardTab;
@@ -59,6 +60,8 @@ const NAV_BOTTOM: NavItem[] = [
 const DashboardPage: FC = () => {
     const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [bidInboxDecrypted, setBidInboxDecrypted] = useState(false);
+    const [claimPaymentPrize, setClaimPaymentPrize] = useState("");
     const { address } = useAccount();
     const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
     const isBidInboxView = activeTab === "bid-inbox";
@@ -68,8 +71,8 @@ const DashboardPage: FC = () => {
         switch (activeTab) {
             case "overview": return <OverviewTab onNavigate={setActiveTab} />;
             case "bounties": return <BountiesTab />;
-            case "applications": return <ApplicationsTab />;
-            case "bid-inbox": return <BidInboxTab />;
+            case "applications": return <ApplicationsTab onOpenClaimPayment={(prize) => { setClaimPaymentPrize(prize); setActiveTab("claim-payment"); }} />;
+            case "bid-inbox": return <BidInboxTab decrypted={bidInboxDecrypted} onDecrypted={() => setBidInboxDecrypted(true)} />;
             case "reputation": return <ReputationTab />;
             case "skills": return <SkillsTab />;
             case "earnings": return <EarningsTab />;
@@ -80,6 +83,7 @@ const DashboardPage: FC = () => {
             case "settings": return <SettingsTab />;
             case "profile": return <ProfileTab />;
             case "wallet": return <PaymentsTab />;
+            case "claim-payment": return <ClaimPaymentTab prize={claimPaymentPrize} onClose={() => setActiveTab("applications")} />;
             default: return <OverviewTab onNavigate={setActiveTab} />;
         }
     };
@@ -296,17 +300,37 @@ const DashboardPage: FC = () => {
                                 <Bell className="w-5 h-5 text-white" />
                             </button>
                         </div>
-                    ) : (
-                        <div className="flex items-center gap-3">
-                            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border bg-transparent cursor-pointer transition-colors"
-                                style={{ borderColor: "#222" }}
+                    ) : activeTab === "claim-payment" ? (
+                        <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center">
+                            <button onClick={() => setActiveTab("applications")} className="w-8 h-8 flex items-center justify-center rounded-lg bg-transparent cursor-pointer border-none justify-self-start"
                                 onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#111"; }}
                                 onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; }}
                             >
-                                <ChevronDown className="w-4 h-4" style={{ color: "#888", transform: sidebarCollapsed ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 0.2s" }} />
+                                <ArrowLeft className="w-5 h-5 text-white" />
                             </button>
-                            <h1 className="text-[15px] font-bold text-white capitalize">{activeTab.replace("-", " ").replace("my posted", "My Posted Bounties")}</h1>
+                            <h1 className="text-[15px] font-bold text-white">Claim Payment: Generating Address</h1>
+                            <div />
+                        </div>
+                    ) : (
+                        <div className="w-full grid grid-cols-[1fr_auto_1fr] items-center">
+                            <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-transparent cursor-pointer border-none justify-self-start"
+                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#111"; }}
+                                onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; }}
+                            >
+                                <svg width="18" height="14" viewBox="0 0 18 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect y="0" width="18" height="2" rx="1" fill="white" />
+                                    <rect y="6" width="18" height="2" rx="1" fill="white" />
+                                    <rect y="12" width="18" height="2" rx="1" fill="white" />
+                                </svg>
+                            </button>
+                            <h1 className="text-[15px] font-bold text-white text-center">DarkEarn</h1>
+                            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-transparent cursor-pointer border-none justify-self-end"
+                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#111"; }}
+                                onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; }}
+                            >
+                                <Bell className="w-5 h-5 text-white" />
+                            </button>
                         </div>
                     )}
                 </header>
@@ -335,7 +359,7 @@ const DashboardPage: FC = () => {
                         { id: "bounties" as DashboardTab, label: "Bounties", icon: <Briefcase className="w-4 h-4" /> },
                         { id: "settings" as DashboardTab, label: "Profile", icon: <User className="w-4 h-4" /> },
                     ] : BOTTOM_NAV).map((item) => {
-                        const isActive = activeTab === item.id;
+                        const isActive = activeTab === item.id || (activeTab === "claim-payment" && item.id === "applications");
                         return (
                             <button
                                 key={item.id}
