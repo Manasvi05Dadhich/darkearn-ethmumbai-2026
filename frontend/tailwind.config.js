@@ -3,6 +3,7 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/@fileverse-dev/ddoc/dist/**/*.js",
   ],
   theme: {
     extend: {

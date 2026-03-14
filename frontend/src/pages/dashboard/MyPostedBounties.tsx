@@ -3,6 +3,7 @@ import { ChevronDown, Eye, CheckCircle2, Loader2 } from "lucide-react";
 import { useAccount, useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { CONTRACTS } from "../../contracts";
 import { formatEther } from "viem";
+import FileverseBriefViewer from "../../components/FileverseBriefViewer";
 
 interface Applicant { id: number; message: string; revealed: boolean; ensName: string; accepted: boolean; }
 interface PostedBounty { id: number; title: string; prize: string; status: string; applicants: Applicant[]; deadline: string; }
@@ -12,6 +13,7 @@ const STATUS_LABELS: Record<number, string> = { 0: "Open", 1: "In Progress", 2: 
 const MyPostedBountiesTab: FC = () => {
     const { address } = useAccount();
     const [expanded, setExpanded] = useState<number | null>(null);
+    const [viewingBriefCid, setViewingBriefCid] = useState<string | null>(null);
 
     // Read bounty count
     const { data: nextId } = useReadContract({ ...CONTRACTS.BountyEscrow, functionName: "nextBountyId" });
@@ -149,6 +151,11 @@ const MyPostedBountiesTab: FC = () => {
                     );
                 })}
             </div>
+
+            {/* Fileverse Brief Viewer Modal */}
+            {viewingBriefCid && (
+                <FileverseBriefViewer cid={viewingBriefCid} onClose={() => setViewingBriefCid(null)} />
+            )}
         </div>
     );
 };

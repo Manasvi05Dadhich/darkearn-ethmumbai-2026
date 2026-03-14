@@ -7,6 +7,9 @@ import { useReadContract, useReadContracts, useWriteContract, useWaitForTransact
 import { CONTRACTS } from "../contracts";
 import { formatEther } from "viem";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { saveApplication } from "../hooks/useMyApplications";
+import { useUserNFT } from "../hooks/useUserNFT";
+import { toast } from "sonner";
 
 
 interface Bounty {
@@ -85,7 +88,7 @@ const BountyBoardNavbar: FC<{
     onNavigate: (page: string) => void;
     userEns?: string;
     userBand?: number;
-}> = ({ onNavigate, userEns = "alice.eth", userBand = 0 }) => {
+}> = ({ onNavigate, userEns = "anon", userBand = 0 }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -271,15 +274,18 @@ const BountyDetailPanel: FC<{
     isOpen: boolean;
     onClose: () => void;
 }> = ({ bounty, isOpen, onClose }) => {
-    const [applyState, setApplyState] = useState<"idle" | "pending" | "success" | "error">("idle");
+    const [applyState, setApplyState] = useState<"idle" | "form" | "pending" | "success" | "error">("idle");
     const [applyMessage, setApplyMessage] = useState("");
+    const [portfolioLink, setPortfolioLink] = useState("");
     const panelRef = useRef<HTMLDivElement>(null);
     const { address } = useAccount();
+    const { ensName: userEnsName } = useUserNFT();
 
     // Reset state when bounty changes
     useEffect(() => {
         setApplyState("idle");
         setApplyMessage("");
+        setPortfolioLink("");
     }, [bounty?.id]);
 
     // Real contract write for applying
@@ -291,19 +297,29 @@ const BountyDetailPanel: FC<{
     }, [isPending]);
 
     useEffect(() => {
-        if (applyConfirmed) setApplyState("success");
-    }, [applyConfirmed]);
+        if (applyConfirmed && bounty && address) {
+            setApplyState("success");
+            saveApplication(address, bounty.id, bounty.applicants + 1);
+            toast.success(`Applied to "${bounty.title}" as Applicant #${bounty.applicants + 1}`);
+        }
+    }, [applyConfirmed, bounty, address]);
 
     useEffect(() => {
-        if (applyError) setApplyState("error");
+        if (applyError) {
+            setApplyState("error");
+            toast.error(applyError.message?.slice(0, 80) || "Application failed");
+        }
     }, [applyError]);
 
     const handleApply = () => {
-        if (!bounty || !address) return;
+        if (!bounty || !address || !applyMessage.trim()) return;
+        const fullMessage = portfolioLink
+            ? `${applyMessage.trim()}\n\nPortfolio/Links: ${portfolioLink.trim()}`
+            : applyMessage.trim();
         writeContract({
             ...CONTRACTS.BountyEscrow,
             functionName: "applyToBounty",
-            args: [BigInt(bounty.id), bounty.posterEns || "anon", applyMessage || "I'd like to work on this bounty."],
+            args: [BigInt(bounty.id), userEnsName || "anon", fullMessage],
         });
     };
 
@@ -426,35 +442,102 @@ const BountyDetailPanel: FC<{
                     </div>
                 </div>
 
-                {/* Apply Button - Fixed at bottom */}
-                <div className="p-5 border-t" style={{ borderColor: "#1a1a1a", background: "#0a0a0a" }}>
+                {/* Apply Section - Fixed at bottom */}
+                <div className="border-t" style={{ borderColor: "#1a1a1a", background: "#0a0a0a" }}>
                     {applyState === "success" ? (
-                        <div className="flex items-center gap-3 justify-center py-3 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                            <CheckCircle2 className="w-5 h-5" style={{ color: "#22c55e" }} />
+                        <div className="p-5">
+                            <div className="flex items-center gap-3 justify-center py-3 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                                <CheckCircle2 className="w-5 h-5" style={{ color: "#22c55e" }} />
+                                <div>
+                                    <p className="text-[13px] font-bold" style={{ color: "#22c55e" }}>Application submitted.</p>
+                                    <p className="text-[11px]" style={{ color: "#888" }}>You appear as Applicant #{bounty.applicants + 1} — your identity is anonymous.</p>
+                                </div>
+                            </div>
+                        </div>
+                    ) : applyState === "form" ? (
+                        <div className="p-5 flex flex-col gap-4">
+                            <h4 className="text-[12px] font-bold tracking-widest uppercase" style={{ color: "#888" }}>Your Application</h4>
+
                             <div>
-                                <p className="text-[13px] font-bold" style={{ color: "#22c55e" }}>Application submitted.</p>
-                                <p className="text-[11px]" style={{ color: "#888" }}>You appear as Applicant #{bounty.applicants + 1} — your identity is anonymous.</p>
+                                <label className="text-[11px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "#666" }}>
+                                    Why are you the right fit? *
+                                </label>
+                                <textarea
+                                    value={applyMessage}
+                                    onChange={(e) => setApplyMessage(e.target.value)}
+                                    rows={4}
+                                    placeholder="Describe your relevant experience, approach, and timeline..."
+                                    className="w-full text-[13px] px-4 py-3 rounded-lg outline-none transition-all resize-vertical"
+                                    style={{ background: "#111", border: "1px solid #222", color: "#fff", fontFamily: "inherit" }}
+                                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.3)"; }}
+                                    onBlur={(e) => { e.currentTarget.style.borderColor = "#222"; }}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[11px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "#666" }}>
+                                    Portfolio / Links (optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={portfolioLink}
+                                    onChange={(e) => setPortfolioLink(e.target.value)}
+                                    placeholder="https://github.com/you, demo link, past work..."
+                                    className="w-full text-[13px] px-4 py-3 rounded-lg outline-none transition-all"
+                                    style={{ background: "#111", border: "1px solid #222", color: "#fff", fontFamily: "inherit" }}
+                                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.3)"; }}
+                                    onBlur={(e) => { e.currentTarget.style.borderColor = "#222"; }}
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setApplyState("idle")}
+                                    className="px-5 py-3 rounded-lg text-[12px] font-bold uppercase tracking-wider border cursor-pointer bg-transparent transition-colors"
+                                    style={{ borderColor: "#333", color: "#888", fontFamily: "inherit" }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#555"; e.currentTarget.style.color = "#ccc"; }}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.color = "#888"; }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleApply}
+                                    disabled={!applyMessage.trim()}
+                                    className="flex-1 py-3 rounded-lg text-[13px] font-bold uppercase tracking-wider border-none cursor-pointer transition-all flex items-center justify-center gap-2"
+                                    style={{
+                                        background: applyMessage.trim() ? "#e8ff00" : "#1a1a1a",
+                                        color: applyMessage.trim() ? "#000" : "#555",
+                                        cursor: applyMessage.trim() ? "pointer" : "not-allowed",
+                                        fontFamily: "inherit",
+                                    }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (applyMessage.trim()) e.currentTarget.style.transform = "translateY(-1px)"; }}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.transform = "translateY(0)"; }}
+                                >
+                                    Submit Application <ArrowRight className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
                     ) : (
-                        <button
-                            onClick={handleApply}
-                            disabled={applyState !== "idle"}
-                            className="w-full font-bold text-[14px] py-4 rounded-lg uppercase tracking-wider transition-all border-none cursor-pointer flex items-center justify-center gap-3"
-                            style={{
-                                background: applyState !== "idle" ? "#1a1a1a" : "#e8ff00",
-                                color: applyState !== "idle" ? "#888" : "#000",
-                                cursor: applyState !== "idle" ? "not-allowed" : "pointer",
-                                boxShadow: applyState === "idle" ? "0 0 20px rgba(232,255,0,0.1)" : "none",
-                                fontFamily: "inherit"
-                            }}
-                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 30px rgba(232,255,0,0.25)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
-                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 20px rgba(232,255,0,0.1)"; e.currentTarget.style.transform = "translateY(0)"; } }}
-                        >
-                            {applyState === "pending" && <><Loader2 className="w-5 h-5 animate-spin" /> Confirm in Wallet...</>}
-                            {applyState === "error" && <>Transaction Failed — Try Again</>}
-                            {applyState === "idle" && <>Apply to this Bounty <ArrowRight className="w-4 h-4" /></>}
-                        </button>
+                        <div className="p-5">
+                            <button
+                                onClick={() => applyState === "error" ? setApplyState("form") : setApplyState("form")}
+                                disabled={applyState === "pending"}
+                                className="w-full font-bold text-[14px] py-4 rounded-lg uppercase tracking-wider transition-all border-none cursor-pointer flex items-center justify-center gap-3"
+                                style={{
+                                    background: applyState === "pending" ? "#1a1a1a" : "#e8ff00",
+                                    color: applyState === "pending" ? "#888" : "#000",
+                                    cursor: applyState === "pending" ? "not-allowed" : "pointer",
+                                    boxShadow: applyState === "idle" ? "0 0 20px rgba(232,255,0,0.1)" : "none",
+                                    fontFamily: "inherit"
+                                }}
+                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 30px rgba(232,255,0,0.25)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                                onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 20px rgba(232,255,0,0.1)"; e.currentTarget.style.transform = "translateY(0)"; } }}
+                            >
+                                {applyState === "pending" && <><Loader2 className="w-5 h-5 animate-spin" /> Confirm in Wallet...</>}
+                                {applyState === "error" && <>Transaction Failed — Try Again</>}
+                                {applyState === "idle" && <>Apply to this Bounty <ArrowRight className="w-4 h-4" /></>}
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
@@ -553,7 +636,7 @@ const BountyBoard: FC = () => {
                 currency: "ETH",
                 category,
                 categoryColor: CATEGORY_COLORS[category] || "#627eea",
-                posterEns: posterENS || "anon.eth",
+                posterEns: posterENS || "Anonymous",
                 posterAvatar: (posterENS || "A")[0].toUpperCase(),
                 deadline: formatDeadline(deadline),
                 deadlineDate: formatDeadlineDate(deadline),

@@ -1,26 +1,24 @@
-import { useState } from "react";
 import { useAccount, useDisconnect } from "wagmi";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import BountyBoard from "./pages/BountyBoard";
 import DashboardPage from "./pages/dashboard/index";
+import PublicProfile from "./pages/PublicProfile";
+import HowItWorks from "./pages/HowItWorks";
 import { useReputationNFT } from "./hooks/useReputationNFT";
 
-type PageType = "login" | "onboarding" | "bounties" | "dashboard";
-
-function App() {
+function AppContent() {
     const { isConnected, address } = useAccount();
     const { disconnect } = useDisconnect();
     const { hasNFT, isLoading } = useReputationNFT(address);
-    const [currentPage, setCurrentPage] = useState<PageType | null>(null);
 
-    // Auto-route based on wallet state (only if user hasn't manually navigated)
-    const activePage = currentPage ?? (
+    const activePage =
         !isConnected ? "login" :
         isLoading ? "loading" :
         !hasNFT ? "onboarding" :
-        "bounties"
-    );
+        "bounties";
 
     if (activePage === "loading") {
         return (
@@ -42,34 +40,34 @@ function App() {
 
     return (
         <>
-            {/* Dev Navigation Bar — always visible */}
-            <div className="fixed bottom-4 right-4 z-[9999] flex gap-1.5 bg-zinc-900/95 border border-zinc-800 p-2 rounded-lg shadow-2xl backdrop-blur">
-                {(["login", "onboarding", "bounties", "dashboard"] as PageType[]).map((page) => (
-                    <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1.5 text-[10px] font-bold rounded cursor-pointer border-none uppercase tracking-wider ${activePage === page ? 'bg-[#e8ff00] text-black' : 'text-[#888] hover:text-white hover:bg-zinc-800'}`}
-                        style={{ fontFamily: "inherit" }}
-                    >
-                        {page}
-                    </button>
-                ))}
-                {isConnected && (
-                    <button
-                        onClick={() => { disconnect(); setCurrentPage("login"); }}
-                        className="px-3 py-1.5 text-[10px] font-bold rounded cursor-pointer border-none text-red-400 hover:bg-zinc-800 uppercase tracking-wider"
-                        style={{ fontFamily: "inherit" }}
-                    >
-                        ✕
-                    </button>
-                )}
-            </div>
-
             {activePage === "login" && <LoginPage />}
             {activePage === "onboarding" && <OnboardingPage />}
             {activePage === "bounties" && <BountyBoard />}
             {activePage === "dashboard" && <DashboardPage />}
         </>
+    );
+}
+
+function App() {
+    return (
+        <BrowserRouter>
+            <Toaster
+                theme="dark"
+                position="bottom-right"
+                toastOptions={{
+                    style: {
+                        background: "#0a0a0a",
+                        border: "1px solid #1a1a1a",
+                        color: "#fff",
+                    },
+                }}
+            />
+            <Routes>
+                <Route path="/profile/:ensName" element={<PublicProfile />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="*" element={<AppContent />} />
+            </Routes>
+        </BrowserRouter>
     );
 }
 

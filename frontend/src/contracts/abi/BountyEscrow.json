@@ -11,6 +11,11 @@
         "name": "_skillRegistry",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_stealthAnnouncer",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
@@ -131,9 +136,19 @@
         "internalType": "uint256"
       },
       {
-        "name": "_recipient",
+        "name": "_stealthAddress",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_ephemeralPubKey",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "_viewTag",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ],
     "outputs": [],
@@ -428,9 +443,19 @@
         "internalType": "uint256"
       },
       {
-        "name": "_hunterFreshAddress",
+        "name": "_hunterStealthAddress",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_ephemeralPubKey",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "_viewTag",
+        "type": "bytes",
+        "internalType": "bytes"
       }
     ],
     "outputs": [],
@@ -481,6 +506,19 @@
         "name": "",
         "type": "address",
         "internalType": "contract SkillRegistry"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "stealthAnnouncer",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC5564Announcer"
       }
     ],
     "stateMutability": "view"

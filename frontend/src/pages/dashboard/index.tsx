@@ -5,6 +5,8 @@ import {
     PlusCircle, List, Users, CreditCard, Settings, ChevronDown,
     Search, Wallet, User, ArrowLeft, Bell, ChevronRight, Clock3, PanelTopOpen
 } from "lucide-react";
+import { useUserNFT } from "../../hooks/useUserNFT";
+import { useBids } from "../../hooks/useBids";
 import OverviewTab from "./Overview";
 import ApplicationsTab from "./Applications";
 import BidInboxTab from "./BidInbox";
@@ -35,7 +37,7 @@ const NAV_TOP: NavItem[] = [
     { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "bounties", label: "Bounties", icon: <Briefcase className="w-4 h-4" /> },
     { id: "applications", label: "My Applications", icon: <FileText className="w-4 h-4" /> },
-    { id: "bid-inbox", label: "Bid Inbox", icon: <Inbox className="w-4 h-4" />, badge: "2" },
+    { id: "bid-inbox", label: "Bid Inbox", icon: <Inbox className="w-4 h-4" /> },
     { id: "reputation", label: "Reputation", icon: <Star className="w-4 h-4" /> },
     { id: "skills", label: "Skills", icon: <Wrench className="w-4 h-4" /> },
     { id: "earnings", label: "Earnings", icon: <DollarSign className="w-4 h-4" /> },
@@ -60,9 +62,16 @@ const DashboardPage: FC = () => {
     const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const { address } = useAccount();
-    const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
+    const { ensName, band, memberSince } = useUserNFT();
+    const { count: bidCount } = useBids();
+    const displayName = ensName || (address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected");
+    const currentBand = band ?? 0;
+    const memberDate = memberSince
+        ? new Date(memberSince * 1000).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+        : "—";
     const isBidInboxView = activeTab === "bid-inbox";
     const isEarningsView = activeTab === "earnings";
+    const [bidInboxDecrypted, setBidInboxDecrypted] = useState(false);
 
     const renderTab = () => {
         switch (activeTab) {
@@ -98,7 +107,7 @@ const DashboardPage: FC = () => {
         >
             {item.icon}
             {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
-            {!sidebarCollapsed && item.badge && (
+            {!sidebarCollapsed && item.badge && Number(item.badge) > 0 && (
                 <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: "#ef4444", color: "#fff" }}>
                     {item.badge}
                 </span>
@@ -112,8 +121,6 @@ const DashboardPage: FC = () => {
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
                 .dash-fade { animation: fadeIn 0.3s ease; }
             `}</style>
-
-            {/* Sidebar */}
             {isBidInboxView ? (
                 <aside
                     className="fixed top-0 left-0 bottom-0 z-40 flex flex-col border-r"
@@ -128,8 +135,8 @@ const DashboardPage: FC = () => {
                                 <User className="w-4 h-4" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-[10px] font-bold text-white truncate">{shortAddr}</p>
-                                <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "#e8ff00" }}>Band 3 Operative</p>
+                                <p className="text-[10px] font-bold text-white truncate">{displayName}</p>
+                                <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "#e8ff00" }}>Band {currentBand}</p>
                             </div>
                         </div>
                     </div>
@@ -191,14 +198,14 @@ const DashboardPage: FC = () => {
                     {/* Profile */}
                     <div className="px-4 py-5 border-b" style={{ borderColor: "#1a1a1a" }}>
                         <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
                                 style={{ background: "rgba(232,255,0,0.12)", color: "#e8ff00", border: "1.5px solid rgba(232,255,0,0.2)" }}>
-                                {shortAddr[0].toUpperCase()}
+                                {displayName[0].toUpperCase()}
                             </div>
                             {!sidebarCollapsed && (
                                 <div>
-                                    <p className="text-[13px] font-semibold text-white">{shortAddr}</p>
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(232,255,0,0.1)", color: "#e8ff00" }}>Band 0</span>
+                                    <p className="text-[13px] font-semibold text-white">{displayName}</p>
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(232,255,0,0.1)", color: "#e8ff00" }}>Band {currentBand}</span>
                                 </div>
                             )}
                         </div>
@@ -206,7 +213,12 @@ const DashboardPage: FC = () => {
 
                     {/* Nav Top */}
                     <div className="flex-1 px-3 py-4 flex flex-col gap-1">
-                        {NAV_TOP.map((item) => <NavButton key={item.id} item={item} />)}
+                        {NAV_TOP.map((item) => (
+                            <NavButton
+                                key={item.id}
+                                item={item.id === "bid-inbox" ? { ...item, badge: bidCount > 0 ? String(bidCount) : undefined } : item}
+                            />
+                        ))}
 
                         <div className="my-3 border-t" style={{ borderColor: "#1a1a1a" }} />
 
@@ -217,7 +229,7 @@ const DashboardPage: FC = () => {
                     {!sidebarCollapsed && (
                         <div className="px-4 py-4 border-t" style={{ borderColor: "#1a1a1a" }}>
                             <p className="text-[10px] font-medium leading-relaxed" style={{ color: "#555" }}>
-                                Band 0 · 0 completions<br />Member since March 2025
+                                Band {currentBand} · {displayName}<br />Member since {memberDate}
                             </p>
                         </div>
                     )}
@@ -310,14 +322,11 @@ const DashboardPage: FC = () => {
                         </div>
                     )}
                 </header>
-
-                {/* Tab Content */}
                 <div className={`p-4 md:p-8 ${isEarningsView ? "pb-20 pt-4" : "pb-14"} dash-fade`} key={activeTab}>
                     {renderTab()}
                 </div>
             </main>
 
-            {/* Bottom Navigation - 4 buttons */}
             {!isBidInboxView && (
                 <nav
                     className="fixed bottom-0 z-50 flex items-center justify-around py-2"

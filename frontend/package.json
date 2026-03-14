@@ -10,14 +10,33 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aztec/bb.js": "^3.0.0-nightly.20251104",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@fileverse-dev/ddoc": "^3.0.72",
+    "@fileverse/crypto": "^0.0.22",
+    "@fileverse/ui": "^5.0.2",
+    "@noir-lang/noir_js": "^1.0.0-beta.19",
     "@rainbow-me/rainbowkit": "^2.2.10",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/react-query": "^5.90.21",
+    "buffer": "^6.0.3",
+    "framer-motion": "^12.36.0",
+    "frimousse": "^0.3.0",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1",
+    "sonner": "^2.0.7",
     "viem": "^2.47.2",
-    "wagmi": "^3.5.0"
+    "vite-plugin-node-polyfills": "^0.17.0",
+    "wagmi": "2.19.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "wagmi": "2.19.5"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
