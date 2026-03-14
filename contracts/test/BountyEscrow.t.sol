@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/BountyEscrow.sol";
 import "../src/ReputationNFT.sol";
 import "../src/SkillRegistry.sol";
+import "../src/ERC5564Announcer.sol";
 
 /// @dev Mock verifier for testing
 contract MockVerifier {
@@ -20,6 +21,7 @@ contract BountyEscrowTest is Test {
     BountyEscrow public escrow;
     ReputationNFT public nft;
     SkillRegistry public registry;
+    ERC5564Announcer public announcer;
     MockVerifier public verifier;
 
     address public deployer = makeAddr("deployer");
@@ -31,6 +33,8 @@ contract BountyEscrowTest is Test {
 
     bytes public dummyProof = hex"deadbeef";
     bytes32[] public bandInputs;
+    bytes public dummyEphemeralPubKey = hex"02deadbeefcafebabe1234567890abcdef1234567890abcdef1234567890abcdef12";
+    bytes public dummyViewTag = hex"ab";
 
     uint256 public futureDeadline;
     bytes32 public lockId = keccak256("lock-1");
@@ -46,7 +50,8 @@ contract BountyEscrowTest is Test {
         verifier = new MockVerifier();
         nft = new ReputationNFT(address(verifier));
         registry = new SkillRegistry();
-        escrow = new BountyEscrow(address(nft), address(registry));
+        announcer = new ERC5564Announcer();
+        escrow = new BountyEscrow(address(nft), address(registry), address(announcer));
         registry.setBountyEscrow(address(escrow));
         vm.stopPrank();
 
@@ -389,26 +394,25 @@ contract BountyEscrowTest is Test {
     // PAYMENT TESTS
     // =========================================================
 
-    // Test 19: claimPayment by winner with fresh address succeeds
+    // Test 19: claimPayment by winner with stealth address succeeds
     function test_claimPaymentSucceeds() public {
         uint256 bountyId = _postBounty();
         _applyAndAcceptHunter1(bountyId);
         _submitAndApprove(bountyId);
 
         vm.prank(hunter1);
-        escrow.claimPayment(bountyId, freshWallet);
+        escrow.claimPayment(bountyId, freshWallet, dummyEphemeralPubKey, dummyViewTag);
     }
 
-    // Test 20: claimPayment where recipient equals ENS-linked wallet reverts
-    function test_claimPaymentToENSWalletReverts() public {
+    // Test 20: claimPayment to own wallet reverts
+    function test_claimPaymentToOwnWalletReverts() public {
         uint256 bountyId = _postBounty();
         _applyAndAcceptHunter1(bountyId);
         _submitAndApprove(bountyId);
 
-        // hunter1 is the minter of their NFT, so sending to hunter1 should revert
         vm.prank(hunter1);
-        vm.expectRevert(BountyEscrow.CannotPayENSWallet.selector);
-        escrow.claimPayment(bountyId, hunter1);
+        vm.expectRevert("Cannot pay your own wallet");
+        escrow.claimPayment(bountyId, hunter1, dummyEphemeralPubKey, dummyViewTag);
     }
 
     // Test 21: claimPayment twice reverts
@@ -418,11 +422,11 @@ contract BountyEscrowTest is Test {
         _submitAndApprove(bountyId);
 
         vm.prank(hunter1);
-        escrow.claimPayment(bountyId, freshWallet);
+        escrow.claimPayment(bountyId, freshWallet, dummyEphemeralPubKey, dummyViewTag);
 
         vm.prank(hunter1);
         vm.expectRevert(BountyEscrow.PaymentAlreadyMade.selector);
-        escrow.claimPayment(bountyId, freshWallet);
+        escrow.claimPayment(bountyId, freshWallet, dummyEphemeralPubKey, dummyViewTag);
     }
 
     // Test 22: claimPayment by non-winner reverts
@@ -433,7 +437,7 @@ contract BountyEscrowTest is Test {
 
         vm.prank(random);
         vm.expectRevert(BountyEscrow.NotWinner.selector);
-        escrow.claimPayment(bountyId, freshWallet);
+        escrow.claimPayment(bountyId, freshWallet, dummyEphemeralPubKey, dummyViewTag);
     }
 
     // =========================================================
@@ -553,7 +557,7 @@ contract BountyEscrowTest is Test {
         // Try resolving immediately (before 48h)
         vm.prank(random);
         vm.expectRevert(BountyEscrow.DisputeResolutionTooEarly.selector);
-        escrow.resolveDispute(bountyId, freshWallet);
+        escrow.resolveDispute(bountyId, freshWallet, dummyEphemeralPubKey, dummyViewTag);
     }
 
     // Test 31: resolveDispute after 48 hours succeeds with 50/50 split
@@ -570,7 +574,7 @@ contract BountyEscrowTest is Test {
 
         vm.warp(block.timestamp + 48 hours + 1);
         vm.prank(random);
-        escrow.resolveDispute(bountyId, freshWallet);
+        escrow.resolveDispute(bountyId, freshWallet, dummyEphemeralPubKey, dummyViewTag);
 
         assertEq(
             uint256(_getBountyStatus(bountyId)),

@@ -154,11 +154,12 @@ export async function unlockFunds(
 export async function sendPayment(
     walletId: string,
     recipientAddress: string,
-    amount: string
+    amount: string,
+    comment?: string
 ): Promise<string> {
     const wallet = await getWallet(walletId);
 
-    const result = await wallet.sendMany({
+    const sendParams: Record<string, unknown> = {
         walletPassphrase: config.BITGO_WALLET_PASSPHRASE,
         recipients: [
             {
@@ -167,7 +168,12 @@ export async function sendPayment(
             },
         ],
         type: "transfer",
-    });
+    };
+    if (comment) {
+        sendParams.comment = comment;
+    }
+
+    const result = await wallet.sendMany(sendParams as any);
 
     const txid = result.txid || result.tx || "unknown";
     console.log(

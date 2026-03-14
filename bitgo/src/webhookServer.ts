@@ -57,13 +57,33 @@ app.post("/bitgo-webhook", async (req, res) => {
         const payload = req.body;
         console.log("[Webhook] Received policy webhook:", JSON.stringify(payload, null, 2));
 
+        // With ERC-5564 stealth addresses, the recipient is a fresh stealth address
+        // that has no NFT. We check the WINNER (from the transfer comment) instead.
+        const comment = payload?.transfer?.comment ?? payload?.comment ?? "";
+        const winnerMatch = comment.match(/winner:(0x[a-fA-F0-9]{40})/);
+        const winnerAddress = winnerMatch ? winnerMatch[1] : "";
 
+        if (winnerAddress && ethers.isAddress(winnerAddress)) {
+            const hasNFT = await checkReputationNFT(winnerAddress);
+
+            if (hasNFT) {
+                logWebhookDecision(winnerAddress, "approved", "Winner has ReputationNFT — paying stealth address");
+                res.status(200).json({ approved: true });
+            } else {
+                logWebhookDecision(winnerAddress, "denied", "Winner has no ReputationNFT");
+                res.status(200).json({
+                    approved: false,
+                    reason: "Winner has no DarkEarn reputation credential",
+                });
+            }
+            return;
+        }
+
+        // Fallback: try checking recipient directly (legacy non-stealth payments)
         let recipientAddress = "";
-
         if (payload?.recipients?.[0]?.address) {
             recipientAddress = payload.recipients[0].address;
         } else if (payload?.transfer?.entries) {
-
             const receiving = payload.transfer.entries.find(
                 (e: any) => BigInt(e.value || e.valueString || "0") > 0n
             );
@@ -77,26 +97,20 @@ app.post("/bitgo-webhook", async (req, res) => {
         }
 
         if (!recipientAddress) {
-            logWebhookDecision("unknown", "denied", "Could not extract recipient address from payload");
+            logWebhookDecision("unknown", "denied", "Could not extract recipient or winner from payload");
             res.status(200).json({
                 approved: false,
-                reason: "Could not extract recipient address from payload",
+                reason: "Could not identify payment recipient",
             });
             return;
         }
 
-
         const hasNFT = await checkReputationNFT(recipientAddress);
-
         if (hasNFT) {
             logWebhookDecision(recipientAddress, "approved", "Verified DarkEarn reputation credential");
             res.status(200).json({ approved: true });
         } else {
-            logWebhookDecision(
-                recipientAddress,
-                "denied",
-                "No verified DarkEarn reputation credential"
-            );
+            logWebhookDecision(recipientAddress, "denied", "No verified DarkEarn reputation credential");
             res.status(200).json({
                 approved: false,
                 reason: "No verified DarkEarn reputation credential",

@@ -28,7 +28,13 @@ contract ReputationNFT is ERC721 {
     // Member since timestamp
     mapping(uint256 => uint256) public tokenIdToMemberSince;
 
+    // ERC-5564 stealth meta-address (public — meant to be discoverable)
+    mapping(uint256 => bytes) public tokenIdToStealthMetaAddress;
+    // Reverse lookup: wallet address => tokenId
+    mapping(address => uint256) public addressToTokenId;
+
     // --- Events ---
+    event StealthMetaAddressSet(uint256 indexed tokenId, address indexed owner);
     event BandUpgraded(
         uint256 indexed tokenId,
         uint256 oldBand,
@@ -93,11 +99,12 @@ contract ReputationNFT is ERC721 {
         tokenIdToMinter[tokenId] = msg.sender;
         tokenIdToBand[tokenId] = scoreBand;
         tokenIdToMemberSince[tokenId] = block.timestamp;
+        addressToTokenId[msg.sender] = tokenId;
 
         return tokenId;
     }
 
-    /// @notice Owner-only mint for integration testing — bypasses ZK proof
+    /// @notice Public mint for demo — bypasses ZK proof
     /// @param _to Address to mint to
     /// @param _ensName ENS name to bind
     /// @param _band Reputation band (0-4)
@@ -106,7 +113,6 @@ contract ReputationNFT is ERC721 {
         string calldata _ensName,
         uint256 _band
     ) external returns (uint256) {
-        if (msg.sender != owner) revert NotContractOwner();
         if (bytes(_ensName).length == 0) revert EmptyENSName();
         if (ensToTokenId[_ensName] != 0) revert ENSAlreadyRegistered();
 
@@ -118,6 +124,7 @@ contract ReputationNFT is ERC721 {
         tokenIdToMinter[tokenId] = _to;
         tokenIdToBand[tokenId] = _band;
         tokenIdToMemberSince[tokenId] = block.timestamp;
+        addressToTokenId[_to] = tokenId;
 
         return tokenId;
     }
@@ -194,5 +201,19 @@ contract ReputationNFT is ERC721 {
 
     function getBand(uint256 _tokenId) external view returns (uint256) {
         return tokenIdToBand[_tokenId];
+    }
+
+    /// @notice Set stealth meta-address for ERC-5564 private payments
+    function setStealthMetaAddress(bytes calldata _metaAddress) external {
+        uint256 tokenId = addressToTokenId[msg.sender];
+        require(tokenId != 0, "No profile");
+        tokenIdToStealthMetaAddress[tokenId] = _metaAddress;
+        emit StealthMetaAddressSet(tokenId, msg.sender);
+    }
+
+    /// @notice Get stealth meta-address for a user (public — used by posters to compute stealth addresses)
+    function getStealthMetaAddress(address _user) external view returns (bytes memory) {
+        uint256 tokenId = addressToTokenId[_user];
+        return tokenIdToStealthMetaAddress[tokenId];
     }
 }

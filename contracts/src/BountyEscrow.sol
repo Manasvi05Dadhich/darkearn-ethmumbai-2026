@@ -3,6 +3,7 @@ pragma solidity ^0.8.27;
 
 import "./ReputationNFT.sol";
 import "./SkillRegistry.sol";
+import "./IERC5564Announcer.sol";
 
 /// @title BountyEscrow - Full DarkEarn bounty lifecycle
 /// @notice Anonymous applications, privacy-enforced payments, dispute resolution
@@ -51,6 +52,7 @@ contract BountyEscrow {
     // --- State ---
     ReputationNFT public immutable reputationNFT;
     SkillRegistry public immutable skillRegistry;
+    IERC5564Announcer public immutable stealthAnnouncer;
 
     uint256 public nextBountyId;
     mapping(uint256 => Bounty) internal _bounties;
@@ -135,9 +137,10 @@ contract BountyEscrow {
     error EmptyTitle();
     error EmptyPosterENS();
 
-    constructor(address _reputationNFT, address _skillRegistry) {
+    constructor(address _reputationNFT, address _skillRegistry, address _stealthAnnouncer) {
         reputationNFT = ReputationNFT(_reputationNFT);
         skillRegistry = SkillRegistry(_skillRegistry);
+        stealthAnnouncer = IERC5564Announcer(_stealthAnnouncer);
         nextBountyId = 1;
     }
 
@@ -306,28 +309,40 @@ contract BountyEscrow {
     // PAYMENT (privacy enforced)
     // =========================================================
 
-    function claimPayment(uint256 _bountyId, address _recipient) external {
+    /**
+     * @notice Claim payment to a stealth address (ERC-5564).
+     * @param _bountyId        The completed bounty
+     * @param _stealthAddress  Computed stealth address — where BitGo sends funds
+     * @param _ephemeralPubKey Random pubkey used to derive the stealth address
+     * @param _viewTag         First byte for fast scanning
+     */
+    function claimPayment(
+        uint256 _bountyId,
+        address _stealthAddress,
+        bytes calldata _ephemeralPubKey,
+        bytes calldata _viewTag
+    ) external {
         Bounty storage b = _bounties[_bountyId];
         if (b.status != BountyStatus.Completed) revert BountyNotCompleted();
         if (msg.sender != b.winner) revert NotWinner();
         if (b.paymentClaimed) revert PaymentAlreadyMade();
+        require(_stealthAddress != address(0), "Zero address");
 
-        // PRIVACY ENFORCEMENT: recipient must NOT be the winner's ENS-linked wallet
-        // Look up winner's application to get their ENS name, then get their minter address
-        uint256 winnerApplicantId = _applicantAddressToId[_bountyId][b.winner];
-        Application storage winnerApp = _applications[_bountyId][
-            winnerApplicantId
-        ];
-        uint256 winnerTokenId = reputationNFT.ensToTokenId(
-            winnerApp.applicantENS
-        );
-        address ensWallet = reputationNFT.tokenIdToMinter(winnerTokenId);
-        if (_recipient == ensWallet) revert CannotPayENSWallet();
+        // Privacy enforcement — stealth address must not be winner's own wallet
+        require(_stealthAddress != msg.sender, "Cannot pay your own wallet");
 
         b.paymentClaimed = true;
 
-        // BitGo service listens for this event and releases funds
-        emit PaymentClaimed(_bountyId, b.winner, _recipient, b.prizeAmount);
+        // Announce stealth payment on-chain via ERC-5564
+        stealthAnnouncer.announce(
+            0,
+            _stealthAddress,
+            _ephemeralPubKey,
+            abi.encodePacked(_viewTag)
+        );
+
+        // BitGo service listens for this event and releases funds to the stealth address
+        emit PaymentClaimed(_bountyId, b.winner, _stealthAddress, b.prizeAmount);
     }
 
     // =========================================================
@@ -375,7 +390,9 @@ contract BountyEscrow {
 
     function resolveDispute(
         uint256 _bountyId,
-        address _hunterFreshAddress
+        address _hunterStealthAddress,
+        bytes calldata _ephemeralPubKey,
+        bytes calldata _viewTag
     ) external {
         Bounty storage b = _bounties[_bountyId];
         if (b.status != BountyStatus.Disputed) revert BountyNotDisputed();
@@ -386,11 +403,19 @@ contract BountyEscrow {
 
         uint256 halfPrize = b.prizeAmount / 2;
 
-        // 50% to hunter's fresh address
+        // Announce stealth payment for hunter's half
+        stealthAnnouncer.announce(
+            0,
+            _hunterStealthAddress,
+            _ephemeralPubKey,
+            abi.encodePacked(_viewTag)
+        );
+
+        // 50% to hunter's stealth address
         emit PaymentClaimed(
             _bountyId,
             b.winner,
-            _hunterFreshAddress,
+            _hunterStealthAddress,
             halfPrize
         );
         // 50% refund signal to poster

@@ -5,6 +5,7 @@ import "forge-std/Script.sol";
 import "../src/ReputationVerifier.sol";
 import "../src/ReputationNFT.sol";
 import "../src/SkillRegistry.sol";
+import "../src/ERC5564Announcer.sol";
 import "../src/BountyEscrow.sol";
 
 /// @title DeployAll - Atomic deployment of all DarkEarn contracts
@@ -24,8 +25,12 @@ contract DeployAll is Script {
         SkillRegistry registry = new SkillRegistry();
         console.log("SkillRegistry deployed at:", address(registry));
 
-        // 4. Deploy BountyEscrow
-        BountyEscrow escrow = new BountyEscrow(address(nft), address(registry));
+        // 4. Deploy ERC5564Announcer
+        ERC5564Announcer announcer = new ERC5564Announcer();
+        console.log("ERC5564Announcer deployed at:", address(announcer));
+
+        // 5. Deploy BountyEscrow (with announcer)
+        BountyEscrow escrow = new BountyEscrow(address(nft), address(registry), address(announcer));
         console.log("BountyEscrow deployed at:", address(escrow));
 
         // 5. Link SkillRegistry to BountyEscrow
@@ -45,6 +50,9 @@ contract DeployAll is Script {
                 '  "SkillRegistry": "',
                 vm.toString(address(registry)),
                 '",\n',
+                '  "ERC5564Announcer": "',
+                vm.toString(address(announcer)),
+                '",\n',
                 '  "BountyEscrow": "',
                 vm.toString(address(escrow)),
                 '"\n',
@@ -53,6 +61,6 @@ contract DeployAll is Script {
         );
 
         vm.writeFile("../addresses.json", json);
-        console.log("addresses.json written with all 4 contract addresses");
+        console.log("addresses.json written with all 5 contract addresses");
     }
 }

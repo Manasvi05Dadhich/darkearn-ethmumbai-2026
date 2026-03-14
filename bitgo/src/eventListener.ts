@@ -8,7 +8,7 @@ import {
 } from "./walletService.js";
 
 const BOUNTY_ESCROW_ABI = [
-    "event PaymentClaimed(uint256 indexed bountyId, address indexed winner, address recipient)",
+    "event PaymentClaimed(uint256 indexed bountyId, address indexed winner, address recipient, uint256 amount)",
     "event BountyCancelled(uint256 indexed bountyId, bytes32 bitgoLockId)",
     "event BountyRefunded(uint256 indexed bountyId)",
     "event DisputeRaised(uint256 indexed bountyId)",
@@ -44,10 +44,10 @@ export function startEventListener(): void {
 
     escrowContract.on(
         "PaymentClaimed",
-        async (bountyId: bigint, winner: string, recipient: string) => {
+        async (bountyId: bigint, winner: string, stealthAddress: string, _amount: bigint) => {
             const id = Number(bountyId);
             console.log(
-                `[EventListener] PaymentClaimed — bounty #${id}, winner: ${winner}, recipient: ${recipient}`
+                `[EventListener] PaymentClaimed — bounty #${id}, winner: ${winner}, stealth: ${stealthAddress}`
             );
 
             try {
@@ -57,16 +57,19 @@ export function startEventListener(): void {
                     return;
                 }
 
+                // Send to STEALTH address — not winner's wallet.
+                // Pass winner in comment so webhook can verify their ReputationNFT.
                 const txid = await sendPayment(
                     lock.bitgoWalletId,
-                    recipient,
-                    lock.prizeAmount
+                    stealthAddress,
+                    lock.prizeAmount,
+                    `winner:${winner}`
                 );
 
                 markLockPaid(id);
 
                 console.log(
-                    `[EventListener] Payment sent for bounty #${id} — txid: ${txid}`
+                    `[EventListener] Payment sent for bounty #${id} to stealth:${stealthAddress} — txid: ${txid}`
                 );
             } catch (err) {
                 console.error(
