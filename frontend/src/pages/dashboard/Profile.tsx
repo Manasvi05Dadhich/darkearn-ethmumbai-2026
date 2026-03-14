@@ -1,5 +1,6 @@
 import { type FC } from "react";
 import { FileCode, Code, Shield, CheckCircle2, Globe } from "lucide-react";
+import { useAccount } from "wagmi";
 
 const SKILL_BADGES = [
     { name: "Solidity", icon: FileCode },
@@ -8,10 +9,12 @@ const SKILL_BADGES = [
 ];
 
 const ProfileTab: FC = () => {
-    const score = 80;
-    const band = 3;
-    const bountiesCompleted = 16;
-    const proofsCount = 20;
+    const { address } = useAccount();
+    const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
+    const score = 0;
+    const band = 0;
+    const bountiesCompleted = 0;
+    const proofsCount = 0;
 
     return (
         <div className="max-w-2xl mx-auto">
@@ -31,7 +34,7 @@ const ProfileTab: FC = () => {
                         Band {band}
                     </span>
                 </div>
-                <h1 className="text-xl font-bold text-white tracking-widest" style={{ letterSpacing: "0.2em" }}>ALICE.ETH</h1>
+                <h1 className="text-xl font-bold text-white tracking-widest" style={{ letterSpacing: "0.2em" }}>{shortAddr.toUpperCase()}</h1>
                 <p className="text-[12px] mt-1" style={{ color: "#888" }}>Member since March 2025</p>
                 <p className="text-[11px] mt-2 font-medium uppercase tracking-wider" style={{ color: "#666" }}>Working reputation URL</p>
             </div>

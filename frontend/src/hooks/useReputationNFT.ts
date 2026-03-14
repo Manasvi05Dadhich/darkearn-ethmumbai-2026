@@ -9,21 +9,13 @@ export function useReputationNFT(address?: `0x${string}`) {
         query: { enabled: !!address },
     });
 
-    const bandResult = useReadContract({
-        ...CONTRACTS.ReputationNFT,
-        functionName: "currentBand",
-        args: address ? [address] : undefined,
-        query: { enabled: !!address },
-    });
-
     const hasNFT = balanceResult.data ? (balanceResult.data as bigint) > 0n : false;
-    const band = bandResult.data !== undefined ? Number(bandResult.data) : undefined;
 
     return {
         hasNFT,
-        band,
-        isLoading: balanceResult.isLoading || bandResult.isLoading,
-        error: balanceResult.error || bandResult.error,
+        isLoading: balanceResult.isLoading,
+        isError: balanceResult.isError,
+        error: balanceResult.error,
     };
 }
 

@@ -1,7 +1,11 @@
 import { useState, type FC } from "react";
 import { Bell, LogOut, Mail, Search, ShieldCheck, UserCircle2, Zap } from "lucide-react";
+import { useAccount, useDisconnect } from "wagmi";
 
 const SettingsTab: FC = () => {
+    const { address } = useAccount();
+    const { disconnect } = useDisconnect();
+    const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
     const [directoryToggle, setDirectoryToggle] = useState(true);
     const [notifBounties, setNotifBounties] = useState(true);
     const [notifPrivateBids, setNotifPrivateBids] = useState(true);
@@ -43,7 +47,7 @@ const SettingsTab: FC = () => {
                     <div className="p-5 rounded-xl border flex items-center justify-between gap-4" style={{ background: "#121208", borderColor: "#2a2a12" }}>
                         <div className="flex items-center gap-3">
                             <UserCircle2 className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                            <p className="text-[26px] font-extrabold text-white leading-none">alice.eth</p>
+                            <p className="text-[26px] font-extrabold text-white leading-none">{shortAddr}</p>
                         </div>
                         <button type="button" className="text-[14px] font-bold border-none bg-transparent cursor-pointer p-0" style={{ color: "#e8ff00", fontFamily: "inherit" }}>
                             Update
@@ -93,10 +97,10 @@ const SettingsTab: FC = () => {
 
                 <button
                     type="button"
+                    onClick={() => disconnect()}
                     className="w-full py-5 rounded-xl border text-[18px] font-bold cursor-pointer bg-transparent flex items-center justify-center gap-3"
                     style={{ borderColor: "rgba(239,68,68,0.5)", color: "#ef4444", fontFamily: "inherit" }}
-                >
-                    <LogOut className="w-5 h-5" /> Disconnect Wallet
+                > <LogOut className="w-5 h-5" /> Disconnect Wallet
                 </button>
             </div>
         </div>

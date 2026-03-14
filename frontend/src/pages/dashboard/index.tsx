@@ -1,4 +1,5 @@
 import { useState, type FC, type MouseEvent } from "react";
+import { useAccount } from "wagmi";
 import {
     LayoutDashboard, Briefcase, FileText, Inbox, Star, Wrench, DollarSign,
     PlusCircle, List, Users, CreditCard, Settings, ChevronDown,
@@ -58,7 +59,8 @@ const NAV_BOTTOM: NavItem[] = [
 const DashboardPage: FC = () => {
     const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-    const [bidInboxDecrypted, setBidInboxDecrypted] = useState(false);
+    const { address } = useAccount();
+    const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
     const isBidInboxView = activeTab === "bid-inbox";
     const isEarningsView = activeTab === "earnings";
 
@@ -67,7 +69,7 @@ const DashboardPage: FC = () => {
             case "overview": return <OverviewTab onNavigate={setActiveTab} />;
             case "bounties": return <BountiesTab />;
             case "applications": return <ApplicationsTab />;
-            case "bid-inbox": return <BidInboxTab decrypted={bidInboxDecrypted} onDecrypted={() => setBidInboxDecrypted(true)} />;
+            case "bid-inbox": return <BidInboxTab />;
             case "reputation": return <ReputationTab />;
             case "skills": return <SkillsTab />;
             case "earnings": return <EarningsTab />;
@@ -126,7 +128,7 @@ const DashboardPage: FC = () => {
                                 <User className="w-4 h-4" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-[10px] font-bold text-white truncate">alice.eth</p>
+                                <p className="text-[10px] font-bold text-white truncate">{shortAddr}</p>
                                 <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: "#e8ff00" }}>Band 3 Operative</p>
                             </div>
                         </div>
@@ -189,13 +191,13 @@ const DashboardPage: FC = () => {
                     {/* Profile */}
                     <div className="px-4 py-5 border-b" style={{ borderColor: "#1a1a1a" }}>
                         <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
+                                <div className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold flex-shrink-0"
                                 style={{ background: "rgba(232,255,0,0.12)", color: "#e8ff00", border: "1.5px solid rgba(232,255,0,0.2)" }}>
-                                A
+                                {shortAddr[0].toUpperCase()}
                             </div>
                             {!sidebarCollapsed && (
                                 <div>
-                                    <p className="text-[13px] font-semibold text-white">alice.eth</p>
+                                    <p className="text-[13px] font-semibold text-white">{shortAddr}</p>
                                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(232,255,0,0.1)", color: "#e8ff00" }}>Band 0</span>
                                 </div>
                             )}

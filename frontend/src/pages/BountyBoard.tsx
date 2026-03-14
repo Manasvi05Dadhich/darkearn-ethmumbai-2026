@@ -8,7 +8,7 @@ import { CONTRACTS } from "../contracts";
 import { formatEther } from "viem";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
-// ── Types ──────────────────────────────────────────────────────
+
 interface Bounty {
     id: number;
     title: string;
@@ -271,22 +271,40 @@ const BountyDetailPanel: FC<{
     isOpen: boolean;
     onClose: () => void;
 }> = ({ bounty, isOpen, onClose }) => {
-    const [applyState, setApplyState] = useState<"idle" | "spinning" | "metamask" | "success">("idle");
+    const [applyState, setApplyState] = useState<"idle" | "pending" | "success" | "error">("idle");
+    const [applyMessage, setApplyMessage] = useState("");
     const panelRef = useRef<HTMLDivElement>(null);
+    const { address } = useAccount();
 
     // Reset state when bounty changes
     useEffect(() => {
         setApplyState("idle");
+        setApplyMessage("");
     }, [bounty?.id]);
 
+    // Real contract write for applying
+    const { writeContract, data: applyTxHash, isPending, error: applyError } = useWriteContract();
+    const { isSuccess: applyConfirmed } = useWaitForTransactionReceipt({ hash: applyTxHash });
+
+    useEffect(() => {
+        if (isPending) setApplyState("pending");
+    }, [isPending]);
+
+    useEffect(() => {
+        if (applyConfirmed) setApplyState("success");
+    }, [applyConfirmed]);
+
+    useEffect(() => {
+        if (applyError) setApplyState("error");
+    }, [applyError]);
+
     const handleApply = () => {
-        setApplyState("spinning");
-        setTimeout(() => {
-            setApplyState("metamask");
-            setTimeout(() => {
-                setApplyState("success");
-            }, 1500);
-        }, 2000);
+        if (!bounty || !address) return;
+        writeContract({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "applyToBounty",
+            args: [BigInt(bounty.id), bounty.posterEns || "anon", applyMessage || "I'd like to work on this bounty."],
+        });
     };
 
     if (!bounty) return null;
@@ -433,8 +451,8 @@ const BountyDetailPanel: FC<{
                             onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 30px rgba(232,255,0,0.25)"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
                             onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (applyState === "idle") { e.currentTarget.style.boxShadow = "0 0 20px rgba(232,255,0,0.1)"; e.currentTarget.style.transform = "translateY(0)"; } }}
                         >
-                            {applyState === "spinning" && <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>}
-                            {applyState === "metamask" && <><Loader2 className="w-5 h-5 animate-spin" /> Confirm in MetaMask...</>}
+                            {applyState === "pending" && <><Loader2 className="w-5 h-5 animate-spin" /> Confirm in Wallet...</>}
+                            {applyState === "error" && <>Transaction Failed — Try Again</>}
                             {applyState === "idle" && <>Apply to this Bounty <ArrowRight className="w-4 h-4" /></>}
                         </button>
                     )}
@@ -485,9 +503,70 @@ const BountyBoard: FC = () => {
         setIsPanelOpen(false);
     };
 
+    // Read bounty count from contract
+    const { data: nextId } = useReadContract({
+        ...CONTRACTS.BountyEscrow,
+        functionName: "nextBountyId",
+    });
+
+    const bountyCount = nextId ? Number(nextId as bigint) - 1 : 0;
+    const bountyIds = Array.from({ length: bountyCount }, (_, i) => i + 1);
+
+    // Batch-read all bounty core data
+    const { data: coreResults, isLoading: coreLoading } = useReadContracts({
+        contracts: bountyIds.map((id) => ({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "getBountyCore" as const,
+            args: [BigInt(id)],
+        })),
+    });
+
+    // Batch-read all bounty meta data
+    const { data: metaResults } = useReadContracts({
+        contracts: bountyIds.map((id) => ({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "getBountyMeta" as const,
+            args: [BigInt(id)],
+        })),
+    });
+
+    // Map on-chain data to UI Bounty interface
+    const allBounties: Bounty[] = useMemo(() => {
+        if (!coreResults) return [];
+        return bountyIds.map((id, i) => {
+            const core = coreResults[i]?.result as [bigint, string, string, string, bigint, bigint, bigint, number] | undefined;
+            const meta = metaResults?.[i]?.result as [string, boolean, boolean, bigint, bigint, string] | undefined;
+            if (!core) return null;
+
+            const [, , posterENS, title, categoryId, deadline, prizeAmount, status] = core;
+            const applicantCount = meta ? Number(meta[3]) : 0;
+            const category = CATEGORY_MAP[Number(categoryId)] || "Solidity";
+            const prizeNum = Number(formatEther(prizeAmount));
+
+            return {
+                id,
+                title: title || `Bounty #${id}`,
+                description: title || "No description provided.",
+                fullDescription: title || "No description provided.",
+                prize: prizeNum > 0 ? `$${prizeNum.toLocaleString()}` : "TBD",
+                prizeNum,
+                currency: "ETH",
+                category,
+                categoryColor: CATEGORY_COLORS[category] || "#627eea",
+                posterEns: posterENS || "anon.eth",
+                posterAvatar: (posterENS || "A")[0].toUpperCase(),
+                deadline: formatDeadline(deadline),
+                deadlineDate: formatDeadlineDate(deadline),
+                applicants: applicantCount,
+                hasPrivateBrief: false,
+                status: STATUS_MAP[status] || "open",
+            } as Bounty;
+        }).filter(Boolean) as Bounty[];
+    }, [coreResults, metaResults, bountyIds]);
+
     // Filter & sort bounties
-    const filteredBounties = BOUNTIES
-        .filter((b) => {
+    const filteredBounties = allBounties
+        .filter((b: Bounty) => {
             if (statusFilter === "open" && b.status !== "open") return false;
             if (activeCategory !== "All" && b.category !== activeCategory) return false;
             if (searchQuery) {
@@ -496,9 +575,9 @@ const BountyBoard: FC = () => {
             }
             return true;
         })
-        .sort((a, b) => {
+        .sort((a: Bounty, b: Bounty) => {
             if (sortBy === "highest") return b.prizeNum - a.prizeNum;
-            if (sortBy === "deadline") return parseInt(a.deadline) - parseInt(b.deadline);
+            if (sortBy === "deadline") return a.id - b.id;
             return b.id - a.id; // newest
         });
 
@@ -637,7 +716,12 @@ const BountyBoard: FC = () => {
                         </div>
                     </div>
 
-                    {filteredBounties.length > 0 ? (
+                    {coreLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20">
+                            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: "#e8ff00" }} />
+                            <p className="text-[13px]" style={{ color: "#777" }}>Loading bounties from Base Sepolia...</p>
+                        </div>
+                    ) : filteredBounties.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             {filteredBounties.map((bounty) => (
                                 <BountyCard key={bounty.id} bounty={bounty} onClick={() => openBounty(bounty)} />
