@@ -67,16 +67,24 @@ const ApplyModal: FC<{
     return (
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)" }}
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
             onClick={onClose}
         >
             <div
                 className="w-full max-w-lg rounded-xl border overflow-hidden"
-                style={{ background: "#0c0c0c", borderColor: "#1a1a1a", maxHeight: "90vh", overflowY: "auto" }}
+                style={{
+                    background: "#141414",
+                    borderColor: "rgba(232,255,0,0.25)",
+                    maxHeight: "90vh",
+                    overflowY: "auto",
+                    boxShadow: "0 0 40px rgba(0,0,0,0.8), 0 0 2px rgba(232,255,0,0.2)",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#333 transparent",
+                }}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "#1a1a1a" }}>
+                <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "#2a2a2a", background: "#181818" }}>
                     <h2 className="text-[15px] font-bold text-white">Apply to Bounty</h2>
                     <button
                         onClick={onClose}
@@ -88,7 +96,7 @@ const ApplyModal: FC<{
                 </div>
 
                 {/* Bounty Info */}
-                <div className="p-5 border-b" style={{ borderColor: "#1a1a1a" }}>
+                <div className="p-5 border-b" style={{ borderColor: "#2a2a2a" }}>
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-[12px]" style={{ color: "#777" }}>{bounty.poster}</span>
                         <span className="font-bold text-[15px]" style={{ color: "#e8ff00" }}>

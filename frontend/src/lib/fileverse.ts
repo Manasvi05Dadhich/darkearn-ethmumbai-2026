@@ -1,9 +1,4 @@
-/**
- * DarkEarn × Fileverse Encryption Service
- *
- * ECIES encryption (secp256k1 + AES-256-GCM) for private briefs and work submissions.
- * Storage: Pinata IPFS when VITE_PINATA_JWT is set, localStorage fallback otherwise.
- */
+
 
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { gcm } from "@noble/ciphers/aes";
@@ -11,6 +6,9 @@ import { sha256 } from "@noble/hashes/sha256";
 import { hkdf } from "@noble/hashes/hkdf";
 import { randomBytes } from "@noble/ciphers/webcrypto";
 import { utf8ToBytes, bytesToHex, hexToBytes } from "@noble/ciphers/utils";
+import { createPublicClient, http, type WalletClient } from "viem";
+import { mainnet } from "viem/chains";
+import { normalize } from "viem/ens";
 
 export interface EncryptedDocument {
     ephemeralPubKey: string;
@@ -26,7 +24,6 @@ export interface DocumentContent {
     author: string;
 }
 
-// ─── Encryption / Decryption ────────────────────────────────
 
 export function encryptForWallet(
     content: DocumentContent,
@@ -66,7 +63,7 @@ export function decryptWithKey(
     return JSON.parse(new TextDecoder().decode(plaintext)) as DocumentContent;
 }
 
-// ─── Wallet-based Key Derivation ────────────────────────────
+
 
 export function deriveKeyFromSignature(signature: string): {
     privateKey: string;
@@ -79,7 +76,49 @@ export function deriveKeyFromSignature(signature: string): {
 
 export const SIGN_MESSAGE = "DarkEarn: Derive my Fileverse encryption key pair";
 
-// ─── IPFS Storage (Pinata) with localStorage fallback ───────
+const ensPublicClient = createPublicClient({
+    chain: mainnet,
+    transport: http(),
+});
+
+export async function getPublicKeyForAddress(
+    address: string,
+    walletClient: WalletClient | null,
+    ensName?: string
+): Promise<string> {
+    if (walletClient) {
+        const addresses = await walletClient.getAddresses();
+        const connectedAddress = addresses?.[0];
+        if (connectedAddress?.toLowerCase() === address.toLowerCase()) {
+            const sig = await walletClient.signMessage({
+                account: connectedAddress,
+                message: SIGN_MESSAGE,
+            });
+            const keys = deriveKeyFromSignature(sig);
+            return keys.publicKey;
+        }
+    }
+
+    let nameToLookup: string | null = ensName ?? null;
+    if (!nameToLookup) {
+        nameToLookup = await ensPublicClient.getEnsName({
+            address: address as `0x${string}`,
+        });
+    }
+    if (!nameToLookup) {
+        throw new Error(`No ENS name found for ${address}. User must set "darkearn-pubkey" ENS text record.`);
+    }
+
+    const pubKey = await ensPublicClient.getEnsText({
+        name: normalize(nameToLookup),
+        key: "darkearn-pubkey",
+    });
+
+    if (!pubKey) {
+        throw new Error(`${nameToLookup} has not set darkearn-pubkey ENS text record.`);
+    }
+    return pubKey;
+}
 
 const PINATA_JWT = import.meta.env.VITE_PINATA_JWT || "";
 const PINATA_GATEWAY = import.meta.env.VITE_PINATA_GATEWAY || "https://gateway.pinata.cloud/ipfs";
@@ -89,10 +128,7 @@ function isPinataConfigured(): boolean {
     return PINATA_JWT.length > 0;
 }
 
-/**
- * Pin an encrypted document to IPFS via Pinata.
- * Returns the IPFS CID (e.g. "QmX...").
- */
+
 async function pinToIPFS(doc: EncryptedDocument, name: string): Promise<string> {
     const res = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
         method: "POST",
@@ -115,16 +151,14 @@ async function pinToIPFS(doc: EncryptedDocument, name: string): Promise<string> 
     return data.IpfsHash as string;
 }
 
-/**
- * Fetch an encrypted document from IPFS via Pinata gateway.
- */
+
 async function fetchFromIPFS(cid: string): Promise<EncryptedDocument> {
     const res = await fetch(`${PINATA_GATEWAY}/${cid}`);
     if (!res.ok) throw new Error(`IPFS fetch failed (${res.status})`);
     return (await res.json()) as EncryptedDocument;
 }
 
-// localStorage helpers for fallback
+
 function localStore(cid: string, doc: EncryptedDocument): void {
     try {
         const store = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}");
@@ -144,11 +178,7 @@ function localFetch(cid: string): EncryptedDocument | null {
     }
 }
 
-/**
- * Store an encrypted document.
- * Uses Pinata IPFS if configured, localStorage otherwise.
- * Always caches in localStorage for fast retrieval.
- */
+
 export async function storeEncryptedDocument(doc: EncryptedDocument): Promise<string> {
     if (isPinataConfigured()) {
         try {
@@ -161,7 +191,7 @@ export async function storeEncryptedDocument(doc: EncryptedDocument): Promise<st
         }
     }
 
-    // Fallback: localStorage with hash-based CID
+    
     const serialized = JSON.stringify(doc);
     const hash = bytesToHex(sha256(utf8ToBytes(serialized)));
     const cid = `local-${hash.slice(0, 16)}`;
@@ -170,16 +200,12 @@ export async function storeEncryptedDocument(doc: EncryptedDocument): Promise<st
     return cid;
 }
 
-/**
- * Fetch an encrypted document by CID.
- * Checks localStorage first (cache), then IPFS.
- */
 export async function fetchEncryptedDocument(cid: string): Promise<EncryptedDocument | null> {
-    // Check local cache first
+   
     const cached = localFetch(cid);
     if (cached) return cached;
 
-    // If it looks like an IPFS CID (not local-*), try fetching from gateway
+    
     if (isPinataConfigured() && !cid.startsWith("local-")) {
         try {
             const doc = await fetchFromIPFS(cid);
