@@ -1,7 +1,7 @@
-DarkEarn 🛡️
+DarkEarn 
 First Dollar. But Private.
 
-A privacy-first bounty marketplace on Base where your earnings, identity, and payment destination are mathematically hidden — not just visually.# DarkEarn 🛡️
+A privacy-first bounty marketplace on Base where your earnings, identity, and payment destination are mathematically hidden — not just visually.# DarkEarn 
 ### *First Dollar. But Private.*
 
 > A privacy-first bounty marketplace on Base where your earnings, identity, and payment destination are mathematically hidden — not just visually.
