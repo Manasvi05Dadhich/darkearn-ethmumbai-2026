@@ -1,8 +1,12 @@
-import { useState, type FC, type MouseEvent } from "react";
+import React, { type FC, type MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { Lock, Shield, EyeOff, Key } from "lucide-react";
+import logo from "../assets/logo.png";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { theme } from "../theme";
 
-// ── Types ────────────────────────────────────────────────────
+const t = theme;
+
 interface Bounty {
   id: number;
   title: string;
@@ -26,7 +30,6 @@ interface BountyCardProps {
   apps: number;
 }
 
-// ── Data ─────────────────────────────────────────────────────
 const BOUNTIES: Bounty[] = [
   { id: 1, title: "Build a ZK identity verification module for ENS", prize: "$2,400 USDC", tags: ["Solidity", "ZK", "ENS"], deadline: "12d left", apps: 7 },
   { id: 2, title: "Design privacy-first dashboard UI for DeFi protocol", prize: "$1,800 USDC", tags: ["Figma", "UX", "Web3"], deadline: "5d left", apps: 14 },
@@ -37,36 +40,55 @@ const BOUNTIES: Bounty[] = [
 ];
 
 const FEATURES: Feature[] = [
-  { icon: <Lock className="w-6 h-6 mx-auto mb-2" style={{ color: "#e8ff00" }} />, title: "EARNINGS HIDDEN", desc: "Financial flows are obfuscated using zero-knowledge protocols. Only you know your worth." },
-  { icon: <Shield className="w-6 h-6 mx-auto mb-2" style={{ color: "#e8ff00" }} />, title: "WALLET PRIVATE", desc: "Decouple your professional identity from your personal assets. Secure and untraceable." },
-  { icon: <EyeOff className="w-6 h-6 mx-auto mb-2" style={{ color: "#e8ff00" }} />, title: "WORK CONFIDENTIAL", desc: "Build your reputation without exposing your history. Anonymity is the ultimate utility." },
+  { icon: <Lock className="w-6 h-6 mx-auto mb-2" style={{ color: t.color.accent }} />, title: "EARNINGS HIDDEN", desc: "Financial flows are obfuscated using zero-knowledge protocols. Only you know your worth." },
+  { icon: <Shield className="w-6 h-6 mx-auto mb-2" style={{ color: t.color.accent }} />, title: "WALLET PRIVATE", desc: "Decouple your professional identity from your personal assets. Secure and untraceable." },
+  { icon: <EyeOff className="w-6 h-6 mx-auto mb-2" style={{ color: t.color.accent }} />, title: "WORK CONFIDENTIAL", desc: "Build your reputation without exposing your history. Anonymity is the ultimate utility." },
 ];
 
-// ── Navbar ───────────────────────────────────────────────────
-const Navbar: FC = () => (
-  <nav className="fixed top-0 left-0 right-0 z-50 border-b border-black/50 bg-[#060606]/95 backdrop-blur">
+const Navbar: FC<{ onBrowse: () => void; onHowItWorks: () => void; onHome: () => void }> = ({ onBrowse, onHowItWorks, onHome }) => (
+  <nav className="fixed top-0 left-0 right-0 z-50 border-b border-black/50 backdrop-blur" style={{ background: `${t.color.background.primary}95` }}>
     <div className="w-full px-6 md:px-12 flex items-center justify-between" style={{ height: 72 }}>
-      <div className="flex items-center gap-2">
-        <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-        <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">DARKEARN</span>
+      <div className="flex items-center gap-8">
+        <button type="button" onClick={onHome} className="flex items-center gap-2 cursor-pointer bg-transparent border-none p-0">
+          <img src={logo} alt="DarkEarn" className="h-8 w-auto" />
+        </button>
+        <button
+          type="button"
+          onClick={onBrowse}
+          className="font-semibold uppercase text-[12px] tracking-wider transition-colors hidden sm:block"
+          style={{ color: t.color.text.secondary, letterSpacing: t.font.tracking.wider }}
+          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = t.color.accent; }}
+          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = t.color.text.secondary; }}
+        >
+          Browse Bounties
+        </button>
+        <button
+          type="button"
+          onClick={onHowItWorks}
+          className="font-semibold uppercase text-[12px] tracking-wider transition-colors hidden sm:block"
+          style={{ color: t.color.text.secondary, letterSpacing: t.font.tracking.wider }}
+          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = t.color.accent; }}
+          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = t.color.text.secondary; }}
+        >
+          How It Works
+        </button>
       </div>
       <ConnectButton />
     </div>
   </nav>
 );
 
-// ── BountyCard ────────────────────────────────────────────────
 const BountyCard: FC<BountyCardProps> = ({ title, prize, tags, deadline, apps }) => (
-  <div className="p-5 transition-colors" style={{ background: "#0a0a0a", borderBottom: "1px solid #1a1a1a" }}>
+  <div className="p-5 transition-colors" style={{ background: t.color.surface.card, borderBottom: `1px solid ${t.color.border.default}` }}>
     <div className="flex justify-between items-center mb-3">
-      <span className="font-bold text-sm tracking-wide" style={{ color: "#e8ff00" }}>{prize}</span>
-      <span className="text-xs" style={{ color: "#555" }}>{deadline}</span>
+      <span className="font-bold text-sm tracking-wide" style={{ color: t.color.accent }}>{prize}</span>
+      <span className="text-xs" style={{ color: t.color.text.muted }}>{deadline}</span>
     </div>
     <p className="text-sm font-semibold text-white leading-snug mb-4">{title}</p>
     <div className="flex flex-wrap gap-2 mb-4">
-      {tags.map((t: string) => (
-        <span key={t} style={{ background: "#111", color: "#666", fontSize: 10, padding: "3px 8px", textTransform: "uppercase", letterSpacing: "0.06em", borderRadius: 2 }}>
-          {t}
+      {tags.map((tagname: string) => (
+        <span key={tagname} style={{ background: t.color.background.tertiary, color: t.color.secondaryDark, fontSize: 10, padding: "3px 8px", textTransform: "uppercase", letterSpacing: "0.06em", borderRadius: 2 }}>
+          {tagname}
         </span>
       ))}
     </div>
@@ -77,33 +99,36 @@ const BountyCard: FC<BountyCardProps> = ({ title, prize, tags, deadline, apps })
 );
 
 const LoginPage: FC = () => {
-  const [isBrowsing, setIsBrowsing] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const handleBrowse = () => {
-    setIsBrowsing(true);
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    navigate("/choose-role");
+  };
+
+  const handleHowItWorks = () => {
+    navigate("/how-it-works");
+  };
+
+  const handleHome = () => {
+    navigate("/");
   };
 
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden" style={{ background: "#060606", color: "#fff", fontFamily: "'Inter', sans-serif" }}>
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden" style={{ background: t.color.background.primary, color: t.color.text.primary, fontFamily: t.font.family.sans }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;0,900;1,700;1,900&display=swap');
-        
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        
         .live-dot { animation: blink 2s ease-in-out infinite; }
         .hero-inner { animation: fadeUp 0.6s ease both; }
-        
         .bg-grid {
           background-size: 40px 40px;
-          background-image: 
+          background-image:
             linear-gradient(to right, rgba(232, 255, 0, 0.04) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(232, 255, 0, 0.04) 1px, transparent 1px);
           width: 100vw;
           min-width: 100%;
         }
-
         .heading-text {
           font-family: 'Inter', sans-serif;
           font-weight: 900;
@@ -113,40 +138,35 @@ const LoginPage: FC = () => {
           text-transform: uppercase;
           font-size: clamp(48px, 9vw, 100px);
         }
-
         .heading-sm {
-           font-family: 'Inter', sans-serif;
-           font-weight: 900;
-           font-style: italic;
-           text-transform: uppercase;
-           letter-spacing: -0.02em;
+          font-family: 'Inter', sans-serif;
+          font-weight: 900;
+          font-style: italic;
+          text-transform: uppercase;
+          letter-spacing: -0.02em;
         }
       `}</style>
 
-      <Navbar />
+      <Navbar onBrowse={handleBrowse} onHowItWorks={handleHowItWorks} onHome={handleHome} />
 
-      {/* ── HERO ── */}
       <section className="relative flex items-center justify-center bg-grid" style={{ paddingTop: 72, minHeight: "85vh", width: "100%" }}>
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(circle at 50% 50%, transparent 0%, #060606 80%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 50%, transparent 0%, ${t.color.background.primary} 80%)` }} />
 
         <div className="relative z-10 text-center px-6 py-20 max-w-4xl hero-inner">
-          {/* Badge */}
           <div className="inline-flex items-center justify-center gap-2 mb-8 px-4 py-1.5 font-bold rounded-full"
-            style={{ border: "1px solid rgba(232,255,0,0.2)", color: "#e8ff00", fontSize: 10, letterSpacing: "0.1em" }}>
-            <span className="live-dot rounded-full inline-block" style={{ width: 6, height: 6, background: "#e8ff00" }} />
+            style={{ border: `1px solid ${t.color.accentBorder}`, color: t.color.accent, fontSize: 10, letterSpacing: "0.1em" }}>
+            <span className="live-dot rounded-full inline-block" style={{ width: 6, height: 6, background: t.color.accent }} />
             ZERO KNOWLEDGE BOUNTIES NOW LIVE
           </div>
 
-          {/* Headline */}
           <h1 className="mb-8 heading-text flex flex-col items-center justify-center">
             <div className="flex gap-3 drop-shadow-lg">
               <span className="text-white">WORK</span>
-              <span style={{ color: "#e8ff00" }}>PUBLICLY.</span>
+              <span style={{ color: t.color.accent }}>PUBLICLY.</span>
             </div>
             <div className="flex gap-3 drop-shadow-lg">
               <span className="text-white">EARN</span>
-              <span style={{ color: "#e8ff00" }}>PRIVATELY.</span>
+              <span style={{ color: t.color.accent }}>PRIVATELY.</span>
             </div>
           </h1>
 
@@ -161,9 +181,9 @@ const LoginPage: FC = () => {
                 <button
                   onClick={openConnectModal}
                   className="font-bold uppercase"
-                  style={{ background: "#e8ff00", color: "#000", padding: "16px 36px", fontSize: 13, border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", borderRadius: 2 }}
-                  onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                  onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; e.currentTarget.style.transform = "translateY(0)"; }}
+                  style={{ background: t.color.accent, color: t.color.accentForeground, padding: "16px 36px", fontSize: t.font.size.text.sm, border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", borderRadius: 2 }}
+                  onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.accentHover; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.accent; e.currentTarget.style.transform = "translateY(0)"; }}
                 >
                   START EARNING
                 </button>
@@ -172,104 +192,94 @@ const LoginPage: FC = () => {
 
             <button
               onClick={handleBrowse}
-              className="font-bold text-[#e8ff00] uppercase"
-              style={{ background: "transparent", border: "1px solid rgba(232,255,0,0.3)", padding: "16px 36px", fontSize: 13, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", borderRadius: 2 }}
-              onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "rgba(232,255,0,0.05)"; e.currentTarget.style.borderColor = "#e8ff00"; }}
-              onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(232,255,0,0.3)"; }}
+              className="font-bold uppercase"
+              style={{ background: "transparent", border: `1px solid ${t.color.accentBorderHover}`, color: t.color.accent, padding: "16px 36px", fontSize: t.font.size.text.sm, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", borderRadius: 2 }}
+              onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.accentSubtle; e.currentTarget.style.borderColor = t.color.accent; }}
+              onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = t.color.accentBorderHover; }}
             >
-              BROWSE BOUNTIES
+              BROWSE BOUNTIES →
             </button>
           </div>
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
       <section className="bg-grid relative" style={{ padding: "0 24px" }}>
-        {/* Subtle overlay */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, transparent, #060606 80%)" }} />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(to bottom, transparent, ${t.color.background.primary} 80%)` }} />
 
         <div className="max-w-[1000px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10" style={{ marginTop: "-50px" }}>
           {FEATURES.map((f: Feature) => (
             <div key={f.title} className="text-center p-8 transition-colors flex flex-col items-center justify-center relative overflow-hidden group rounded-md"
-              style={{ background: "#0c0c0c", border: "1px solid #1a1a1a" }}
-              onMouseEnter={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.2)"; }}
-              onMouseLeave={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = "#1a1a1a"; }}
+              style={{ background: t.color.background.overlay, border: `1px solid ${t.color.border.default}` }}
+              onMouseEnter={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = t.color.accentBorder; }}
+              onMouseLeave={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = t.color.border.default; }}
             >
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#e8ff00] to-transparent opacity-0 group-hover:opacity-20 transition-opacity" />
+              <div className="absolute top-0 left-0 w-full h-[2px] opacity-0 group-hover:opacity-20 transition-opacity" style={{ background: `linear-gradient(to right, transparent, ${t.color.accent}, transparent)` }} />
               <div className="mb-4">{f.icon}</div>
-              <h3 className="font-bold mb-3 uppercase" style={{ fontSize: 13, color: "#fff", letterSpacing: "0.05em" }}>{f.title}</h3>
-              <p className="mx-auto leading-relaxed font-normal" style={{ fontSize: 13, color: "#777" }}>{f.desc}</p>
+              <h3 className="font-bold mb-3 uppercase" style={{ fontSize: t.font.size.text.sm, color: t.color.text.primary, letterSpacing: "0.05em" }}>{f.title}</h3>
+              <p className="mx-auto leading-relaxed font-normal" style={{ fontSize: t.font.size.text.sm, color: t.color.text.secondary }}>{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── BOUNTY BOARD ── */}
-      <section style={{ padding: "100px 24px 80px", background: "#060606" }}>
+      <section style={{ padding: "100px 24px 80px", background: t.color.background.primary }}>
         <div className="max-w-[1000px] mx-auto">
           <h2 className="text-center text-white mb-2 heading-sm" style={{ fontSize: 32 }}>
             AVAILABLE OPPORTUNITIES
           </h2>
-          <p className="text-center mb-10 font-medium" style={{ color: "#777", fontSize: 13 }}>
-            Connect your wallet to unlock full access to the board
+          <p className="text-center mb-10 font-medium" style={{ color: t.color.text.secondary, fontSize: t.font.size.text.sm }}>
+            Choose your role as Poster or Hunter to browse and apply
           </p>
 
-          <div className="relative" style={{ border: "1px solid #1a1a1a", borderRadius: 8, overflow: "hidden", background: "#0a0a0a" }}>
-            <div className="flex flex-col"
-              style={{ filter: isBrowsing ? "none" : "blur(4px)", opacity: isBrowsing ? 1 : 0.4, transition: "all 0.5s ease", pointerEvents: isBrowsing ? "auto" : "none", userSelect: isBrowsing ? "auto" : "none" }}>
+          <div className="relative" style={{ border: `1px solid ${t.color.border.default}`, borderRadius: t.radius.md, overflow: "hidden", background: t.color.surface.card }}>
+            <div className="flex flex-col" style={{ filter: "blur(4px)", opacity: 0.4, pointerEvents: "none", userSelect: "none" }}>
               {BOUNTIES.map((b: Bounty) => (
                 <BountyCard key={b.id} title={b.title} prize={b.prize} tags={b.tags} deadline={b.deadline} apps={b.apps} />
               ))}
             </div>
 
-            {!isBrowsing && (
-              <ConnectButton.Custom>
-                {({ openConnectModal }) => (
-                  <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-[1px]" onClick={openConnectModal}>
-                    <div className="text-center cursor-pointer rounded-lg border border-[#1a1a1a] p-8 shadow-2xl transition-transform hover:-translate-y-1" style={{ background: "#0a0a0a", maxWidth: 360 }}>
-                      <Key className="w-6 h-6 mx-auto mb-4" style={{ color: "#e8ff00" }} />
-                      <h3 className="font-bold mb-3 tracking-widest uppercase text-white" style={{ fontSize: 13 }}>RESTRICTED AREA</h3>
-                      <p className="mb-6 leading-relaxed text-[#888]" style={{ fontSize: 12 }}>
-                        To protect the privacy of our workers and clients, the full board is encrypted for unauthorized visitors.
-                      </p>
-                      <button
-                        className="w-full font-bold uppercase transition-colors"
-                        style={{ background: "#e8ff00", color: "#000", padding: "12px 20px", border: "none", fontSize: 11, letterSpacing: "0.1em", cursor: "pointer", borderRadius: 2 }}
-                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#d4eb00"; }}
-                        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#e8ff00"; }}
-                      >AUTHENTICATE TO VIEW</button>
-                    </div>
-                  </div>
-                )}
-              </ConnectButton.Custom>
-            )}
+            <div className="absolute inset-0 flex items-center justify-center p-4 backdrop-blur-[1px] cursor-pointer" onClick={handleBrowse}>
+              <div className="text-center rounded-lg border p-8 shadow-2xl transition-all hover:-translate-y-1" style={{ background: t.color.surface.card, borderColor: t.color.border.default, maxWidth: 380 }}>
+                <Key className="w-6 h-6 mx-auto mb-4" style={{ color: t.color.accent }} />
+                <h3 className="font-bold mb-3 tracking-widest uppercase text-white" style={{ fontSize: t.font.size.text.sm }}>BROWSE BOUNTIES</h3>
+                <p className="mb-6 leading-relaxed" style={{ fontSize: t.font.size.text.xs, color: t.color.text.secondary }}>
+                  Choose your role (Poster or Hunter) to unlock the board and start earning privately.
+                </p>
+                <button
+                  type="button"
+                  onClick={(e: MouseEvent<HTMLButtonElement>) => { e.stopPropagation(); handleBrowse(); }}
+                  className="w-full font-bold uppercase transition-colors"
+                  style={{ background: t.color.accent, color: t.color.accentForeground, padding: "12px 20px", border: "none", fontSize: t.font.size.caption.md, letterSpacing: "0.1em", cursor: "pointer", borderRadius: 2 }}
+                  onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.accentHover; }}
+                  onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.accent; }}
+                >
+                  Choose Role & Browse
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer style={{ borderTop: "1px solid #111", padding: "30px 24px", background: "#060606", marginTop: "auto" }}>
+      <footer style={{ borderTop: `1px solid ${t.color.background.tertiary}`, padding: "30px 24px", background: t.color.background.primary, marginTop: "auto" }}>
         <div className="max-w-[1000px] mx-auto flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-            <span className="font-bold tracking-widest text-white uppercase font-sans" style={{ fontSize: 13 }}>DARKEARN</span>
+            <img src={logo} alt="DarkEarn" className="h-6 w-auto" />
           </div>
           <div className="flex gap-6">
             {["TWITTER", "DISCORD", "GITHUB", "DOCS"].map((link: string) => (
               <a key={link} href="#" className="font-semibold uppercase"
-                style={{ fontSize: 11, color: "#666", letterSpacing: "0.1em", textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = "#e8ff00"; }}
-                onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = "#666"; }}
+                style={{ fontSize: t.font.size.caption.md, color: t.color.secondaryDark, letterSpacing: "0.1em", textDecoration: "none", transition: "color 0.2s" }}
+                onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = t.color.accent; }}
+                onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = t.color.secondaryDark; }}
               >{link}</a>
             ))}
           </div>
-          <span style={{ fontSize: 11, color: "#444", fontWeight: 500 }}>
+          <span style={{ fontSize: t.font.size.caption.md, color: "#444", fontWeight: 500 }}>
             © 2025 DARKEARN_PROTOCOL. ALL PRIVACY RESERVED.
           </span>
         </div>
       </footer>
-
-
     </div>
   );
 };

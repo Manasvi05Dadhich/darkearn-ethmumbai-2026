@@ -1,4 +1,6 @@
-import { useState, type FC, type MouseEvent } from "react";
+import { useState, useEffect, type FC, type MouseEvent } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import logo from "../../assets/logo.png";
 import { useAccount } from "wagmi";
 import {
     LayoutDashboard, Briefcase, FileText, Inbox, Star, Wrench, DollarSign,
@@ -58,8 +60,19 @@ const NAV_BOTTOM: NavItem[] = [
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
 ];
 
+const VALID_TABS: DashboardTab[] = ["overview", "bounties", "applications", "bid-inbox", "reputation", "skills", "earnings", "post-bounty", "my-posted", "find-contributors", "payments", "settings", "profile", "wallet"];
+
 const DashboardPage: FC = () => {
-    const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+    const [searchParams] = useSearchParams();
+    const tabParam = searchParams.get("tab");
+    const initialTab = tabParam && VALID_TABS.includes(tabParam as DashboardTab) ? (tabParam as DashboardTab) : "overview";
+    const [activeTab, setActiveTab] = useState<DashboardTab>(initialTab);
+
+    useEffect(() => {
+        if (tabParam && VALID_TABS.includes(tabParam as DashboardTab)) {
+            setActiveTab(tabParam as DashboardTab);
+        }
+    }, [tabParam]);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const { address } = useAccount();
     const { ensName, band, memberSince } = useUserNFT();
@@ -182,9 +195,9 @@ const DashboardPage: FC = () => {
                 <aside className="fixed top-0 left-0 bottom-0 z-40 flex flex-col border-r overflow-y-auto"
                     style={{ width: sidebarCollapsed ? 60 : 250, borderColor: "#1a1a1a", background: "#0a0a0a", transition: "width 0.2s" }}>
                     {/* Logo */}
-                    <div className="flex items-center justify-center px-4 border-b" style={{ height: 64, borderColor: "#1a1a1a" }}>
+                    <Link to="/" className="flex items-center justify-center px-4 border-b no-underline" style={{ height: 64, borderColor: "#1a1a1a" }}>
                         <img
-                            src="/darkearn-logo.png"
+                            src={logo}
                             alt="DarkEarn"
                             style={{
                                 height: sidebarCollapsed ? 28 : 36,
@@ -193,7 +206,7 @@ const DashboardPage: FC = () => {
                                 transition: "height 0.2s",
                             }}
                         />
-                    </div>
+                    </Link>
 
                     {/* Profile */}
                     <div className="px-4 py-5 border-b" style={{ borderColor: "#1a1a1a" }}>
@@ -237,7 +250,7 @@ const DashboardPage: FC = () => {
             )}
 
             {/* Main Content */}
-            <main className="flex-1 min-h-screen" style={{ marginLeft: isBidInboxView ? 116 : (sidebarCollapsed ? 60 : 250), transition: "margin-left 0.2s" }}>
+            <main className="flex-1 min-h-screen min-w-0 overflow-x-hidden" style={{ marginLeft: isBidInboxView ? 116 : (sidebarCollapsed ? 60 : 250), transition: "margin-left 0.2s" }}>
                 {/* Top bar */}
                 <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-8 border-b bg-[#060606]/95 backdrop-blur-md"
                     style={{ height: 56, borderColor: "#1a1a1a" }}>
@@ -322,7 +335,7 @@ const DashboardPage: FC = () => {
                         </div>
                     )}
                 </header>
-                <div className={`p-4 md:p-8 ${isEarningsView ? "pb-20 pt-4" : "pb-14"} dash-fade`} key={activeTab}>
+                <div className={`p-4 md:p-8 min-w-0 overflow-x-hidden ${isEarningsView ? "pb-20 pt-4" : "pb-14"} dash-fade`} key={activeTab}>
                     {renderTab()}
                 </div>
             </main>

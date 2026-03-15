@@ -1,7 +1,126 @@
 @import "tailwindcss";
 
+/* ── DarkEarn Theme (edit src/theme/index.ts as source of truth) ───────────── */
+@theme {
+    /* Font family */
+    --font-sans: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Font sizes - heading */
+    --font-size-h1: 2.5rem;
+    --font-size-h2: 2rem;
+    --font-size-h3: 1.5rem;
+    --font-size-h4: 1.25rem;
+
+    /* Font sizes - subheading */
+    --font-size-sub-lg: 1.125rem;
+    --font-size-sub-md: 1rem;
+    --font-size-sub-sm: 0.9375rem;
+
+    /* Font sizes - text */
+    --font-size-text-lg: 1rem;
+    --font-size-text-md: 0.875rem;
+    --font-size-text-sm: 0.8125rem;
+    --font-size-text-xs: 0.75rem;
+
+    /* Font sizes - caption */
+    --font-size-cap-md: 0.6875rem;
+    --font-size-cap-sm: 0.625rem;
+
+    /* Colors - accent */
+    --color-accent: #e8ff00;
+    --color-accent-muted: rgba(232, 255, 0, 0.15);
+    --color-accent-subtle: rgba(232, 255, 0, 0.08);
+
+    /* Colors - secondary */
+    --color-secondary: #888888;
+    --color-secondary-dark: #666666;
+
+    /* Colors - complementary */
+    --color-complementary: #22c55e;
+    --color-complementary-muted: rgba(34, 197, 94, 0.15);
+
+    /* Colors - background */
+    --color-bg-primary: #060606;
+    --color-bg-secondary: #0a0a0a;
+    --color-bg-tertiary: #111111;
+
+    /* Colors - surface */
+    --color-surface-card: #0a0a0a;
+    --color-surface-elevated: #141414;
+
+    /* Colors - border */
+    --color-border: #1a1a1a;
+    --color-border-subtle: #222222;
+    --color-border-muted: #333333;
+
+    /* Colors - text */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #888888;
+    --color-text-muted: #555555;
+    --color-text-disabled: #333333;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 2.5rem;
+
+    /* Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+    --radius-full: 9999px;
+}
+
+/* ── Base styles ───────────────────────────────────────────────────────── */
+:root {
+    font-family: var(--font-sans);
+}
+
+html, body {
+    overflow-x: hidden;
+}
+
 body {
-    background: #0a0a0a;
-    color: white;
-    font-family: 'Space Grotesk', sans-serif;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+}
+
+/* ── Utility classes for theme tokens ────────────────────────────────────── */
+.text-heading-1 { font-size: var(--font-size-h1); font-weight: 700; }
+.text-heading-2 { font-size: var(--font-size-h2); font-weight: 700; }
+.text-heading-3 { font-size: var(--font-size-h3); font-weight: 700; }
+.text-heading-4 { font-size: var(--font-size-h4); font-weight: 600; }
+.text-sub-lg { font-size: var(--font-size-sub-lg); }
+.text-sub-md { font-size: var(--font-size-sub-md); }
+.text-sub-sm { font-size: var(--font-size-sub-sm); }
+.text-body-lg { font-size: var(--font-size-text-lg); }
+.text-body-md { font-size: var(--font-size-text-md); }
+.text-body-sm { font-size: var(--font-size-text-sm); }
+.text-body-xs { font-size: var(--font-size-text-xs); }
+.text-cap-md { font-size: var(--font-size-cap-md); }
+.text-cap-sm { font-size: var(--font-size-cap-sm); }
+
+.bg-accent { background-color: var(--color-accent); }
+.text-accent { color: var(--color-accent); }
+.border-accent { border-color: var(--color-accent); }
+.bg-secondary { background-color: var(--color-secondary); }
+.text-secondary { color: var(--color-secondary); }
+.bg-complementary { background-color: var(--color-complementary); }
+.text-complementary { color: var(--color-complementary); }
+.bg-surface { background-color: var(--color-surface-card); }
+.bg-elevated { background-color: var(--color-surface-elevated); }
+.border-default { border-color: var(--color-border); }
+.text-muted { color: var(--color-text-muted); }
+
+/* Legacy dotted grid */
+.dotted-grid {
+    background-size: 30px 30px;
+    background-image: radial-gradient(circle, var(--color-border-subtle) 1px, transparent 1px);
 }

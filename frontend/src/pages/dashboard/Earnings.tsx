@@ -12,7 +12,7 @@ const EarningsTab: FC = () => {
     const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Not connected";
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto min-w-0">
             <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                     <div
@@ -37,8 +37,8 @@ const EarningsTab: FC = () => {
             </div>
 
             <div className="rounded-xl border p-5 mb-5" style={{ background: "#121208", borderColor: "#2a2a12" }}>
-                <div className="flex items-center justify-between gap-4">
-                    <div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="min-w-0 flex-1">
                         <h3 className="text-[15px] font-bold text-white mb-1">Visibility</h3>
                         <p className="text-[12px]" style={{ color: "#7c8798" }}>
                             Show earnings across the dashboard
@@ -73,8 +73,8 @@ const EarningsTab: FC = () => {
                         <Lock className="w-6 h-6" style={{ color: "#e8ff00" }} />
                     </div>
                 </div>
-                <div className="px-5 py-4">
-                    <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "#7b7b43" }}>
+                <div className="px-5 py-4 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-3 whitespace-nowrap" style={{ color: "#7b7b43" }}>
                         Total Lifetime Earned
                     </p>
                     {isLoading ? (
@@ -84,7 +84,7 @@ const EarningsTab: FC = () => {
                             {show ? `${totalEarnedFormatted} ETH` : "••••••"}
                         </p>
                     )}
-                    <p className="text-[11px] font-bold mt-2" style={{ color: "#888" }}>
+                    <p className="text-[11px] font-bold mt-2 break-words" style={{ color: "#888" }}>
                         {payments.length === 0
                             ? "No completed bounties yet"
                             : `${payments.length} payment${payments.length > 1 ? "s" : ""} received`}

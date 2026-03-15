@@ -20,7 +20,7 @@ const ProfileTab: FC = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: "#e8ff00" }} />
                 <p className="text-[13px]" style={{ color: "#888" }}>Loading profile from chain...</p>
             </div>
@@ -39,7 +39,7 @@ const ProfileTab: FC = () => {
         : "—";
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto min-w-0">
             <div className="flex flex-col items-center text-center mb-8">
                 <div className="relative mb-4">
                     <div

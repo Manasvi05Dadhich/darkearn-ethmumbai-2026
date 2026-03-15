@@ -1,8 +1,9 @@
 import { type FC } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useReadContract, useReadContracts } from "wagmi";
 import { CONTRACTS } from "../contracts";
 import { Shield, CheckCircle2, Loader2, Code, Cpu, Layout, FileText, Paintbrush } from "lucide-react";
+import logo from "../assets/logo.png";
 
 const SKILL_NAMES = ["Solidity", "Cairo", "Frontend", "Security", "Content", "Design"];
 const SKILL_ICONS: Record<string, FC<{ className?: string; style?: React.CSSProperties }>> = {
@@ -95,18 +96,17 @@ const PublicProfile: FC = () => {
     return (
         <div className="min-h-screen bg-[#060606] text-white font-sans">
             <nav className="border-b py-4 px-6" style={{ borderColor: "#1a1a1a" }}>
-                <div className="max-w-3xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                        <span className="font-bold tracking-widest text-[16px] uppercase">DARKEARN</span>
-                    </div>
+                <div className="w-full max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-6">
+                    <Link to="/" className="flex items-center gap-2 no-underline">
+                        <img src={logo} alt="DarkEarn" className="h-8 w-auto" />
+                    </Link>
                     <span className="text-[12px]" style={{ color: "#555" }}>
                         Public Profile
                     </span>
                 </div>
             </nav>
 
-            <div className="max-w-3xl mx-auto px-6 py-12">
+            <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-12">
                 <div className="flex flex-col items-center text-center mb-12">
                     <div className="relative mb-6">
                         <div

@@ -24,7 +24,7 @@ const OverviewTab: FC<{ onNavigate: (tab: DashboardTab) => void }> = ({ onNaviga
     const progressPercent = Math.min(100, Math.round((totalCompletions / nextBandCompletions) * 100));
 
     return (
-        <div className="max-w-5xl">
+        <div className="w-full max-w-5xl min-w-0">
             {isLoading && (
                 <div className="flex items-center gap-2 mb-4">
                     <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#e8ff00" }} />

@@ -97,8 +97,8 @@ const FindContributorsTab: FC = () => {
     };
 
     return (
-        <div className="max-w-6xl">
-            <div className="flex items-center justify-between mb-6">
+        <div className="w-full max-w-6xl min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <div
                         className="w-8 h-8 rounded-md flex items-center justify-center"

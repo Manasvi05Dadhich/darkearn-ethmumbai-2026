@@ -1,6 +1,11 @@
 import { useState, useEffect, useRef, useMemo, type FC, type MouseEvent } from "react";
+import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
+import { theme } from "../theme";
+
+const t = theme;
 import {
-    Shield, Search, ChevronDown, Clock, Users, ShieldCheck,
+    Search, ChevronDown, Clock, Users, ShieldCheck,
     X, Lock, Loader2, CheckCircle2, ArrowRight
 } from "lucide-react";
 import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount, useDisconnect } from "wagmi";
@@ -102,7 +107,7 @@ const BountyBoardNavbar: FC<{
     }, []);
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-[#060606]/95 backdrop-blur-md" style={{ borderColor: "#1a1a1a" }}>
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md" style={{ background: `${t.color.background.primary}95`, borderColor: t.color.border.default }}>
             <div className="w-full max-w-[1400px] mx-auto px-6 md:px-10 flex items-center justify-between" style={{ height: 64 }}>
                 {/* Left - Logo */}
                 <button
@@ -110,8 +115,7 @@ const BountyBoardNavbar: FC<{
                     className="flex items-center gap-2 cursor-pointer bg-transparent border-none"
                     style={{ fontFamily: "inherit" }}
                 >
-                    <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                    <span className="font-bold text-white tracking-widest text-[14px] uppercase">DARKEARN</span>
+                    <img src={logo} alt="DarkEarn" className="h-8 w-auto" />
                 </button>
 
                 {/* Center - Nav Links */}
@@ -125,9 +129,9 @@ const BountyBoardNavbar: FC<{
                             key={link.id}
                             onClick={() => onNavigate(link.id)}
                             className="bg-transparent border-none cursor-pointer font-medium text-[13px] tracking-wide transition-colors"
-                            style={{ color: link.active ? "#fff" : "#777", fontFamily: "inherit" }}
-                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = "#e8ff00"; }}
-                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = link.active ? "#fff" : "#777"; }}
+                            style={{ color: link.active ? t.color.text.primary : t.color.text.secondary, fontFamily: "inherit" }}
+                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = t.color.accent; }}
+                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.color = link.active ? t.color.text.primary : t.color.text.secondary; }}
                         >
                             {link.label}
                         </button>
@@ -139,20 +143,20 @@ const BountyBoardNavbar: FC<{
                     <button
                         onClick={() => setDropdownOpen(!dropdownOpen)}
                         className="flex items-center gap-3 bg-transparent border rounded-full px-3 py-1.5 cursor-pointer transition-colors"
-                        style={{ borderColor: dropdownOpen ? "rgba(232,255,0,0.3)" : "#222", fontFamily: "inherit" }}
-                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!dropdownOpen) e.currentTarget.style.borderColor = "#333"; }}
-                        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (!dropdownOpen) e.currentTarget.style.borderColor = "#222"; }}
+                        style={{ borderColor: dropdownOpen ? t.color.accentBorderHover : t.color.border.subtle, fontFamily: "inherit" }}
+                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!dropdownOpen) e.currentTarget.style.borderColor = t.color.border.muted; }}
+                        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (!dropdownOpen) e.currentTarget.style.borderColor = t.color.border.subtle; }}
                     >
                         {/* Avatar */}
                         <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
-                            style={{ background: "rgba(232,255,0,0.15)", color: "#e8ff00" }}>
+                            style={{ background: t.color.accentMuted, color: t.color.accent }}>
                             {userEns.charAt(0).toUpperCase()}
                         </div>
                         {/* ENS + Band */}
                         <div className="hidden sm:flex items-center gap-2">
                             <span className="text-white text-[13px] font-medium">{userEns}</span>
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                                style={{ background: "rgba(232,255,0,0.1)", color: "#e8ff00" }}>
+                                style={{ background: t.color.accentSubtle, color: t.color.accent }}>
                                 B{userBand}
                             </span>
                         </div>
@@ -162,7 +166,7 @@ const BountyBoardNavbar: FC<{
                     {/* Dropdown */}
                     {dropdownOpen && (
                         <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border overflow-hidden shadow-2xl"
-                            style={{ background: "#0c0c0c", borderColor: "#1a1a1a", animation: "fadeIn 0.15s ease" }}>
+                            style={{ background: t.color.background.overlay, borderColor: t.color.border.default, animation: "fadeIn 0.15s ease" }}>
                             {[
                                 { label: "Dashboard", id: "dashboard" },
                                 { label: "Profile", id: "profile" },
@@ -172,9 +176,9 @@ const BountyBoardNavbar: FC<{
                                     key={item.id}
                                     onClick={() => { onNavigate(item.id); setDropdownOpen(false); }}
                                     className="w-full text-left px-4 py-3 text-[13px] font-medium bg-transparent border-none cursor-pointer transition-colors"
-                                    style={{ color: "#ccc", fontFamily: "inherit", borderBottom: "1px solid #141414" }}
-                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#111"; e.currentTarget.style.color = "#fff"; }}
-                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ccc"; }}
+                                    style={{ color: t.color.text.placeholder, fontFamily: "inherit", borderBottom: `1px solid ${t.color.surface.elevated}` }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.background.tertiary; e.currentTarget.style.color = t.color.text.primary; }}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = t.color.text.placeholder; }}
                                 >
                                     {item.label}
                                 </button>
@@ -202,8 +206,8 @@ const BountyCard: FC<{ bounty: Bounty; onClick: () => void }> = ({ bounty, onCli
         onClick={onClick}
         className="w-full text-left p-6 rounded-xl border transition-all cursor-pointer group"
         style={{
-            background: "#0a0a0a",
-            borderColor: "#1a1a1a",
+            background: t.color.surface.card,
+            borderColor: t.color.border.default,
             fontFamily: "inherit",
         }}
         onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
@@ -213,8 +217,8 @@ const BountyCard: FC<{ bounty: Bounty; onClick: () => void }> = ({ bounty, onCli
             e.currentTarget.style.boxShadow = "0 8px 30px rgba(0,0,0,0.4)";
         }}
         onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.borderColor = "#1a1a1a";
-            e.currentTarget.style.background = "#0a0a0a";
+            e.currentTarget.style.borderColor = t.color.border.default;
+            e.currentTarget.style.background = t.color.surface.card;
             e.currentTarget.style.transform = "translateY(0)";
             e.currentTarget.style.boxShadow = "none";
         }}
@@ -223,13 +227,13 @@ const BountyCard: FC<{ bounty: Bounty; onClick: () => void }> = ({ bounty, onCli
         <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold"
-                    style={{ background: "#151515", color: "#888", border: "1px solid #222" }}>
+                    style={{ background: "#151515", color: t.color.text.secondary, border: `1px solid ${t.color.border.subtle}` }}>
                     {bounty.posterAvatar}
                 </div>
                 <span className="text-[12px] font-medium" style={{ color: "#777" }}>{bounty.posterEns}</span>
             </div>
-            <span className="font-bold text-[16px] tracking-tight" style={{ color: "#e8ff00" }}>
-                {bounty.prize} <span className="text-[11px] font-semibold" style={{ color: "#888" }}>{bounty.currency}</span>
+            <span className="font-bold text-[16px] tracking-tight" style={{ color: t.color.accent }}>
+                {bounty.prize} <span className="text-[11px] font-semibold" style={{ color: t.color.text.secondary }}>{bounty.currency}</span>
             </span>
         </div>
 
@@ -252,16 +256,16 @@ const BountyCard: FC<{ bounty: Bounty; onClick: () => void }> = ({ bounty, onCli
         {/* Bottom Row */}
         <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5" style={{ color: "#555" }} />
-                <span className="text-[11px] font-medium" style={{ color: "#555" }}>{bounty.deadline}</span>
+                <Clock className="w-3.5 h-3.5" style={{ color: t.color.text.muted }} />
+                <span className="text-[11px] font-medium" style={{ color: t.color.text.muted }}>{bounty.deadline}</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" style={{ color: "#555" }} />
-                <span className="text-[11px] font-medium" style={{ color: "#555" }}>{bounty.applicants} applied</span>
+                <Users className="w-3.5 h-3.5" style={{ color: t.color.text.muted }} />
+                <span className="text-[11px] font-medium" style={{ color: t.color.text.muted }}>{bounty.applicants} applied</span>
             </div>
             <div className="flex items-center gap-1.5 ml-auto">
-                <ShieldCheck className="w-3.5 h-3.5" style={{ color: "#22c55e" }} />
-                <span className="text-[11px] font-bold" style={{ color: "#22c55e" }}>Funds Verified</span>
+                <ShieldCheck className="w-3.5 h-3.5" style={{ color: t.color.complementary }} />
+                <span className="text-[11px] font-bold" style={{ color: t.color.complementary }}>Funds Verified</span>
             </div>
         </div>
     </button>
@@ -337,22 +341,22 @@ const BountyDetailPanel: FC<{
             <div
                 ref={panelRef}
                 className={`fixed top-0 right-0 bottom-0 z-[70] w-full max-w-[600px] flex flex-col transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "translate-x-full"}`}
-                style={{ background: "#0a0a0a", borderLeft: "1px solid #1a1a1a" }}
+                style={{ background: t.color.surface.card, borderLeft: `1px solid ${t.color.border.default}` }}
             >
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto">
                     {/* Header */}
                     <div className="sticky top-0 z-10 flex items-center justify-between p-5 border-b"
-                        style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}>
-                        <h2 className="text-[13px] font-bold tracking-widest uppercase" style={{ color: "#888" }}>Bounty Details</h2>
+                        style={{ background: t.color.surface.card, borderColor: t.color.border.default }}>
+                        <h2 className="text-[13px] font-bold tracking-widest uppercase" style={{ color: t.color.text.secondary }}>Bounty Details</h2>
                         <button
                             onClick={onClose}
                             className="w-8 h-8 flex items-center justify-center rounded-lg border cursor-pointer transition-colors bg-transparent"
-                            style={{ borderColor: "#222" }}
-                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#444"; e.currentTarget.style.background = "#111"; }}
-                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#222"; e.currentTarget.style.background = "transparent"; }}
+                            style={{ borderColor: t.color.border.subtle }}
+                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#444"; e.currentTarget.style.background = t.color.background.tertiary; }}
+                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = t.color.border.subtle; e.currentTarget.style.background = "transparent"; }}
                         >
-                            <X className="w-4 h-4" style={{ color: "#888" }} />
+                            <X className="w-4 h-4" style={{ color: t.color.text.secondary }} />
                         </button>
                     </div>
 
@@ -360,12 +364,12 @@ const BountyDetailPanel: FC<{
                         {/* Poster Info */}
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-bold"
-                                style={{ background: "#151515", color: "#888", border: "1px solid #222" }}>
+                                style={{ background: "#151515", color: t.color.text.secondary, border: `1px solid ${t.color.border.subtle}` }}>
                                 {bounty.posterAvatar}
                             </div>
                             <div>
                                 <span className="text-[14px] font-semibold text-white">{bounty.posterEns}</span>
-                                <p className="text-[11px] mt-0.5" style={{ color: "#555" }}>Bounty Poster</p>
+                                <p className="text-[11px] mt-0.5" style={{ color: t.color.text.muted }}>Bounty Poster</p>
                             </div>
                         </div>
 
@@ -374,8 +378,8 @@ const BountyDetailPanel: FC<{
 
                         {/* Prize + Category Row */}
                         <div className="flex items-center gap-4 mb-6 flex-wrap">
-                            <span className="font-bold text-[20px]" style={{ color: "#e8ff00" }}>
-                                {bounty.prize} <span className="text-[13px] font-semibold" style={{ color: "#888" }}>{bounty.currency}</span>
+                            <span className="font-bold text-[20px]" style={{ color: t.color.accent }}>
+                                {bounty.prize} <span className="text-[13px] font-semibold" style={{ color: t.color.text.secondary }}>{bounty.currency}</span>
                             </span>
                             <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full"
                                 style={{ background: `${bounty.categoryColor}15`, color: bounty.categoryColor }}>
@@ -384,21 +388,21 @@ const BountyDetailPanel: FC<{
                         </div>
 
                         {/* Stats Row */}
-                        <div className="flex items-center gap-6 mb-8 pb-6 border-b flex-wrap" style={{ borderColor: "#1a1a1a" }}>
+                        <div className="flex items-center gap-6 mb-8 pb-6 border-b flex-wrap" style={{ borderColor: t.color.border.default }}>
                             <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4" style={{ color: "#888" }} />
+                                <Clock className="w-4 h-4" style={{ color: t.color.text.secondary }} />
                                 <div>
                                     <p className="text-[12px] font-semibold text-white">{bounty.deadline}</p>
-                                    <p className="text-[10px]" style={{ color: "#555" }}>{bounty.deadlineDate}</p>
+                                    <p className="text-[10px]" style={{ color: t.color.text.muted }}>{bounty.deadlineDate}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4" style={{ color: "#888" }} />
+                                <Users className="w-4 h-4" style={{ color: t.color.text.secondary }} />
                                 <p className="text-[12px] font-semibold text-white">{bounty.applicants} people have applied</p>
                             </div>
                             <div className="flex items-center gap-1.5">
-                                <ShieldCheck className="w-4 h-4" style={{ color: "#22c55e" }} />
-                                <span className="text-[12px] font-bold" style={{ color: "#22c55e" }}>Funds Verified</span>
+                                <ShieldCheck className="w-4 h-4" style={{ color: t.color.complementary }} />
+                                <span className="text-[12px] font-bold" style={{ color: t.color.complementary }}>Funds Verified</span>
                             </div>
                         </div>
 
@@ -419,7 +423,7 @@ const BountyDetailPanel: FC<{
 
                         {/* Full Description */}
                         <div className="mb-8">
-                            <h3 className="text-[12px] font-bold tracking-widest uppercase mb-4" style={{ color: "#888" }}>Description</h3>
+                            <h3 className="text-[12px] font-bold tracking-widest uppercase mb-4" style={{ color: t.color.text.secondary }}>Description</h3>
                             <div className="prose-dark text-[14px] leading-relaxed" style={{ color: "#bbb" }}>
                                 {bounty.fullDescription.split("\n").map((line, i) => {
                                     if (line.startsWith("**") && line.endsWith("**")) {
@@ -442,20 +446,20 @@ const BountyDetailPanel: FC<{
                 </div>
 
                 {/* Apply Section - Fixed at bottom */}
-                <div className="border-t" style={{ borderColor: "#1a1a1a", background: "#0a0a0a" }}>
+                <div className="border-t" style={{ borderColor: t.color.border.default, background: t.color.surface.card }}>
                     {applyState === "success" ? (
                         <div className="p-5">
                             <div className="flex items-center gap-3 justify-center py-3 rounded-lg" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                                <CheckCircle2 className="w-5 h-5" style={{ color: "#22c55e" }} />
+                                <CheckCircle2 className="w-5 h-5" style={{ color: t.color.complementary }} />
                                 <div>
-                                    <p className="text-[13px] font-bold" style={{ color: "#22c55e" }}>Application submitted.</p>
-                                    <p className="text-[11px]" style={{ color: "#888" }}>You appear as Applicant #{bounty.applicants + 1} — your identity is anonymous.</p>
+                                    <p className="text-[13px] font-bold" style={{ color: t.color.complementary }}>Application submitted.</p>
+                                    <p className="text-[11px]" style={{ color: t.color.text.secondary }}>You appear as Applicant #{bounty.applicants + 1} — your identity is anonymous.</p>
                                 </div>
                             </div>
                         </div>
                     ) : applyState === "form" ? (
                         <div className="p-5 flex flex-col gap-4">
-                            <h4 className="text-[12px] font-bold tracking-widest uppercase" style={{ color: "#888" }}>Your Application</h4>
+                            <h4 className="text-[12px] font-bold tracking-widest uppercase" style={{ color: t.color.text.secondary }}>Your Application</h4>
 
                             <div>
                                 <label className="text-[11px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "#666" }}>
@@ -467,9 +471,9 @@ const BountyDetailPanel: FC<{
                                     rows={4}
                                     placeholder="Describe your relevant experience, approach, and timeline..."
                                     className="w-full text-[13px] px-4 py-3 rounded-lg outline-none transition-all resize-vertical"
-                                    style={{ background: "#111", border: "1px solid #222", color: "#fff", fontFamily: "inherit" }}
-                                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.3)"; }}
-                                    onBlur={(e) => { e.currentTarget.style.borderColor = "#222"; }}
+                                    style={{ background: t.color.background.tertiary, border: `1px solid ${t.color.border.subtle}`, color: "#fff", fontFamily: "inherit" }}
+                                    onFocus={(e) => { e.currentTarget.style.borderColor = t.color.accentBorderHover; }}
+                                    onBlur={(e) => { e.currentTarget.style.borderColor = t.color.border.subtle; }}
                                 />
                             </div>
 
@@ -483,9 +487,9 @@ const BountyDetailPanel: FC<{
                                     onChange={(e) => setPortfolioLink(e.target.value)}
                                     placeholder="https://github.com/you, demo link, past work..."
                                     className="w-full text-[13px] px-4 py-3 rounded-lg outline-none transition-all"
-                                    style={{ background: "#111", border: "1px solid #222", color: "#fff", fontFamily: "inherit" }}
-                                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.3)"; }}
-                                    onBlur={(e) => { e.currentTarget.style.borderColor = "#222"; }}
+                                    style={{ background: t.color.background.tertiary, border: `1px solid ${t.color.border.subtle}`, color: "#fff", fontFamily: "inherit" }}
+                                    onFocus={(e) => { e.currentTarget.style.borderColor = t.color.accentBorderHover; }}
+                                    onBlur={(e) => { e.currentTarget.style.borderColor = t.color.border.subtle; }}
                                 />
                             </div>
 
@@ -493,9 +497,9 @@ const BountyDetailPanel: FC<{
                                 <button
                                     onClick={() => setApplyState("idle")}
                                     className="px-5 py-3 rounded-lg text-[12px] font-bold uppercase tracking-wider border cursor-pointer bg-transparent transition-colors"
-                                    style={{ borderColor: "#333", color: "#888", fontFamily: "inherit" }}
-                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#555"; e.currentTarget.style.color = "#ccc"; }}
-                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.color = "#888"; }}
+                                    style={{ borderColor: t.color.border.muted, color: t.color.text.secondary, fontFamily: "inherit" }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = t.color.text.muted; e.currentTarget.style.color = t.color.text.placeholder; }}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = t.color.border.muted; e.currentTarget.style.color = t.color.text.secondary; }}
                                 >
                                     Cancel
                                 </button>
@@ -504,8 +508,8 @@ const BountyDetailPanel: FC<{
                                     disabled={!applyMessage.trim()}
                                     className="flex-1 py-3 rounded-lg text-[13px] font-bold uppercase tracking-wider border-none cursor-pointer transition-all flex items-center justify-center gap-2"
                                     style={{
-                                        background: applyMessage.trim() ? "#e8ff00" : "#1a1a1a",
-                                        color: applyMessage.trim() ? "#000" : "#555",
+                                        background: applyMessage.trim() ? t.color.accent : t.color.border.default,
+                                        color: applyMessage.trim() ? t.color.accentForeground : t.color.text.muted,
                                         cursor: applyMessage.trim() ? "pointer" : "not-allowed",
                                         fontFamily: "inherit",
                                     }}
@@ -523,8 +527,8 @@ const BountyDetailPanel: FC<{
                                 disabled={applyState === "pending"}
                                 className="w-full font-bold text-[14px] py-4 rounded-lg uppercase tracking-wider transition-all border-none cursor-pointer flex items-center justify-center gap-3"
                                 style={{
-                                    background: applyState === "pending" ? "#1a1a1a" : "#e8ff00",
-                                    color: applyState === "pending" ? "#888" : "#000",
+                                    background: applyState === "pending" ? t.color.border.default : t.color.accent,
+                                    color: applyState === "pending" ? t.color.text.secondary : t.color.accentForeground,
                                     cursor: applyState === "pending" ? "not-allowed" : "pointer",
                                     boxShadow: applyState === "idle" ? "0 0 20px rgba(232,255,0,0.1)" : "none",
                                     fontFamily: "inherit"
@@ -670,6 +674,8 @@ const BountyBoard: FC = () => {
     };
 
     const { disconnect } = useDisconnect();
+    const navigate = useNavigate();
+    const { ensName: userEnsName, band: userBand } = useUserNFT();
 
     const handleNavigate = (page: string) => {
         if (page === "disconnect") {
@@ -677,14 +683,33 @@ const BountyBoard: FC = () => {
             return;
         }
         if (page === "dashboard") {
-            window.location.href = "/dashboard";
+            navigate("/dashboard");
             return;
         }
-        console.log(`Navigate to: ${page}`);
+        if (page === "how") {
+            navigate("/how-it-works");
+            return;
+        }
+        if (page === "post") {
+            navigate("/dashboard?tab=post-bounty");
+            return;
+        }
+        if (page === "home" || page === "bounties") {
+            navigate("/");
+            return;
+        }
+        if (page === "profile" && userEnsName) {
+            navigate(`/profile/${encodeURIComponent(userEnsName)}`);
+            return;
+        }
+        if (page === "settings") {
+            navigate("/dashboard?tab=settings");
+            return;
+        }
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-[#060606] text-white font-sans">
+        <div className="min-h-screen flex flex-col text-white font-sans" style={{ background: t.color.background.primary }}>
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
                 .line-clamp-2 {
@@ -696,28 +721,28 @@ const BountyBoard: FC = () => {
                 .filter-scrollbar::-webkit-scrollbar { height: 0; }
                 .search-input:focus { border-color: rgba(232, 255, 0, 0.3) !important; box-shadow: 0 0 0 2px rgba(232,255,0,0.05); }
                 .category-btn { transition: all 0.15s ease; }
-                .category-btn:hover { background: #1a1a1a !important; }
+                .category-btn:hover { background: var(--color-border) !important; }
             `}</style>
 
-            <BountyBoardNavbar onNavigate={handleNavigate} />
+            <BountyBoardNavbar onNavigate={handleNavigate} userEns={userEnsName || "anon"} userBand={userBand ?? 0} />
 
             {/* Main Content */}
             <main className="flex-1 pt-16">
                 {/* Filter Bar */}
-                <div className="border-b sticky top-16 z-40 bg-[#060606]/95 backdrop-blur-md" style={{ borderColor: "#1a1a1a" }}>
+                <div className="border-b sticky top-16 z-40 bg-[#060606]/95 backdrop-blur-md" style={{ borderColor: t.color.border.default }}>
                     <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-4">
                         {/* Row 1: Search + Sort + Status */}
                         <div className="flex items-center gap-4 mb-4 flex-wrap">
                             {/* Search */}
                             <div className="relative flex-1 min-w-[200px] max-w-md">
-                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#555" }} />
+                                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: t.color.text.muted }} />
                                 <input
                                     type="text"
                                     placeholder="Search bounties..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="search-input w-full bg-[#0a0a0a] text-white text-[13px] pl-10 pr-4 py-2.5 rounded-lg outline-none transition-all"
-                                    style={{ border: "1px solid #1a1a1a" }}
+                                    className="search-input w-full text-white text-[13px] pl-10 pr-4 py-2.5 rounded-lg outline-none transition-all"
+                                    style={{ background: t.color.surface.card, border: `1px solid ${t.color.border.default}` }}
                                 />
                             </div>
 
@@ -725,24 +750,24 @@ const BountyBoard: FC = () => {
                             <div className="relative" ref={sortRef}>
                                 <button
                                     onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                                    className="flex items-center gap-2 bg-[#0a0a0a] border rounded-lg px-4 py-2.5 text-[13px] font-medium cursor-pointer transition-colors"
-                                    style={{ borderColor: sortDropdownOpen ? "rgba(232,255,0,0.3)" : "#1a1a1a", color: "#ccc", fontFamily: "inherit" }}
-                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!sortDropdownOpen) e.currentTarget.style.borderColor = "#333"; }}
-                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (!sortDropdownOpen) e.currentTarget.style.borderColor = "#1a1a1a"; }}
+                                    className="flex items-center gap-2 border rounded-lg px-4 py-2.5 text-[13px] font-medium cursor-pointer transition-colors"
+                                    style={{ background: t.color.surface.card, borderColor: sortDropdownOpen ? t.color.accentBorderHover : t.color.border.default, color: t.color.text.placeholder, fontFamily: "inherit" }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (!sortDropdownOpen) e.currentTarget.style.borderColor = t.color.border.muted; }}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (!sortDropdownOpen) e.currentTarget.style.borderColor = t.color.border.default; }}
                                 >
                                     {sortLabels[sortBy]}
                                     <ChevronDown className="w-3.5 h-3.5" style={{ color: "#666", transform: sortDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
                                 </button>
                                 {sortDropdownOpen && (
                                     <div className="absolute left-0 top-full mt-1 w-44 rounded-lg border overflow-hidden shadow-2xl z-50"
-                                        style={{ background: "#0c0c0c", borderColor: "#1a1a1a", animation: "fadeIn 0.15s ease" }}>
+                                        style={{ background: t.color.background.overlay, borderColor: t.color.border.default, animation: "fadeIn 0.15s ease" }}>
                                         {(["newest", "highest", "deadline"] as SortOption[]).map((opt) => (
                                             <button
                                                 key={opt}
                                                 onClick={() => { setSortBy(opt); setSortDropdownOpen(false); }}
                                                 className="w-full text-left px-4 py-2.5 text-[13px] font-medium bg-transparent border-none cursor-pointer transition-colors"
-                                                style={{ color: sortBy === opt ? "#e8ff00" : "#999", fontFamily: "inherit" }}
-                                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "#111"; }}
+                                                style={{ color: sortBy === opt ? t.color.accent : "#999", fontFamily: "inherit" }}
+                                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = t.color.background.tertiary; }}
                                                 onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = "transparent"; }}
                                             >
                                                 {sortLabels[opt]}
@@ -753,18 +778,18 @@ const BountyBoard: FC = () => {
                             </div>
 
                             {/* Status Toggle */}
-                            <div className="flex items-center rounded-lg overflow-hidden border" style={{ borderColor: "#1a1a1a" }}>
+                            <div className="flex items-center rounded-lg overflow-hidden border" style={{ borderColor: t.color.border.default }}>
                                 {(["open", "all"] as StatusFilter[]).map((s) => (
                                     <button
                                         key={s}
                                         onClick={() => setStatusFilter(s)}
                                         className="px-4 py-2.5 text-[12px] font-bold uppercase tracking-wider border-none cursor-pointer transition-colors"
                                         style={{
-                                            background: statusFilter === s ? "#1a1a1a" : "transparent",
-                                            color: statusFilter === s ? "#e8ff00" : "#666",
+                                            background: statusFilter === s ? t.color.border.default : "transparent",
+                                            color: statusFilter === s ? t.color.accent : t.color.secondaryDark,
                                             fontFamily: "inherit"
                                         }}
-                                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (statusFilter !== s) e.currentTarget.style.background = "#111"; }}
+                                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { if (statusFilter !== s) e.currentTarget.style.background = t.color.background.tertiary; }}
                                         onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { if (statusFilter !== s) e.currentTarget.style.background = "transparent"; }}
                                     >
                                         {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -781,9 +806,9 @@ const BountyBoard: FC = () => {
                                     onClick={() => setActiveCategory(cat)}
                                     className="category-btn px-4 py-2 text-[12px] font-bold uppercase tracking-wider rounded-lg border-none cursor-pointer whitespace-nowrap"
                                     style={{
-                                        background: activeCategory === cat ? (cat === "All" ? "#e8ff00" : `${CATEGORY_COLORS[cat]}20`) : "#0f0f0f",
-                                        color: activeCategory === cat ? (cat === "All" ? "#000" : CATEGORY_COLORS[cat] || "#e8ff00") : "#666",
-                                        border: activeCategory === cat ? (cat === "All" ? "1px solid #e8ff00" : `1px solid ${CATEGORY_COLORS[cat]}40`) : "1px solid #1a1a1a",
+                                        background: activeCategory === cat ? (cat === "All" ? t.color.accent : `${CATEGORY_COLORS[cat]}20`) : "#0f0f0f",
+                                        color: activeCategory === cat ? (cat === "All" ? t.color.accentForeground : CATEGORY_COLORS[cat] || t.color.accent) : t.color.secondaryDark,
+                                        border: activeCategory === cat ? (cat === "All" ? `1px solid ${t.color.accent}` : `1px solid ${CATEGORY_COLORS[cat]}40`) : `1px solid ${t.color.border.default}`,
                                         fontFamily: "inherit"
                                     }}
                                 >
@@ -802,14 +827,14 @@ const BountyBoard: FC = () => {
                             {filteredBounties.length} {filteredBounties.length === 1 ? "bounty" : "bounties"} found
                         </p>
                         <div className="flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4" style={{ color: "#22c55e" }} />
-                            <span className="text-[11px] font-medium" style={{ color: "#22c55e" }}>All funds escrowed & verified</span>
+                            <ShieldCheck className="w-4 h-4" style={{ color: t.color.complementary }} />
+                            <span className="text-[11px] font-medium" style={{ color: t.color.complementary }}>All funds escrowed & verified</span>
                         </div>
                     </div>
 
                     {coreLoading ? (
                         <div className="flex flex-col items-center justify-center py-20">
-                            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: "#e8ff00" }} />
+                            <Loader2 className="w-8 h-8 animate-spin mb-4" style={{ color: t.color.accent }} />
                             <p className="text-[13px]" style={{ color: "#777" }}>Loading bounties from Base Sepolia...</p>
                         </div>
                     ) : filteredBounties.length > 0 ? (
@@ -826,9 +851,9 @@ const BountyBoard: FC = () => {
                             <button
                                 onClick={() => { setSearchQuery(""); setActiveCategory("All"); setStatusFilter("open"); }}
                                 className="mt-4 px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider rounded-lg border cursor-pointer transition-colors bg-transparent"
-                                style={{ borderColor: "#333", color: "#ccc", fontFamily: "inherit" }}
-                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#e8ff00"; e.currentTarget.style.color = "#e8ff00"; }}
-                                onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.color = "#ccc"; }}
+                                style={{ borderColor: t.color.border.muted, color: t.color.text.placeholder, fontFamily: "inherit" }}
+                                onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = t.color.accent; e.currentTarget.style.color = t.color.accent; }}
+                                onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.borderColor = t.color.border.muted; e.currentTarget.style.color = t.color.text.placeholder; }}
                             >
                                 Clear Filters
                             </button>
@@ -837,22 +862,21 @@ const BountyBoard: FC = () => {
                 </div>
 
                 {/* Footer */}
-                <footer className="border-t mt-auto" style={{ borderColor: "#111", padding: "30px 24px", background: "#060606" }}>
+                <footer className="border-t mt-auto" style={{ borderColor: t.color.background.tertiary, padding: "30px 24px", background: t.color.background.primary }}>
                     <div className="max-w-[1400px] mx-auto flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-2">
-                            <Shield className="w-4 h-4" style={{ color: "#e8ff00" }} />
-                            <span className="font-bold tracking-widest text-white uppercase" style={{ fontSize: 12 }}>DARKEARN</span>
+                            <img src={logo} alt="DarkEarn" className="h-6 w-auto" />
                         </div>
                         <div className="flex gap-6">
                             {["TWITTER", "DISCORD", "GITHUB", "DOCS"].map((link) => (
                                 <a key={link} href="#" className="font-semibold uppercase"
-                                    style={{ fontSize: 11, color: "#555", letterSpacing: "0.1em", textDecoration: "none", transition: "color 0.2s" }}
-                                    onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = "#e8ff00"; }}
-                                    onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = "#555"; }}
+                                    style={{ fontSize: 11, color: t.color.text.muted, letterSpacing: "0.1em", textDecoration: "none", transition: "color 0.2s" }}
+                                    onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = t.color.accent; }}
+                                    onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => { e.currentTarget.style.color = t.color.text.muted; }}
                                 >{link}</a>
                             ))}
                         </div>
-                        <span style={{ fontSize: 11, color: "#333", fontWeight: 500 }}>© 2025 DARKEARN_PROTOCOL. ALL PRIVACY RESERVED.</span>
+                        <span style={{ fontSize: 11, color: t.color.text.disabled, fontWeight: 500 }}>© 2025 DARKEARN_PROTOCOL. ALL PRIVACY RESERVED.</span>
                     </div>
                 </footer>
             </main>

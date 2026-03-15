@@ -22,11 +22,11 @@ const PaymentCard: FC<{
     revealedKey: string | null;
 }> = ({ payment, onReveal, revealedKey }) => (
     <div
-        className="px-5 py-4 flex flex-col gap-2"
+        className="px-4 sm:px-5 py-4 flex flex-col gap-2"
         style={{ borderBottom: "1px solid #111" }}
     >
-        <div className="flex items-center justify-between">
-            <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="min-w-0">
                 <p className="text-[13px] font-semibold text-white">
                     Stealth Payment
                 </p>
@@ -34,7 +34,7 @@ const PaymentCard: FC<{
                     {payment.stealthAddress.slice(0, 14)}...{payment.stealthAddress.slice(-8)}
                 </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
                 <span className="text-[13px] font-bold" style={{ color: "#e8ff00" }}>
                     {payment.amount} ETH
                 </span>
@@ -110,8 +110,8 @@ const PaymentsTab: FC = () => {
 
     if (!stealthKeys) {
         return (
-            <div className="max-w-2xl mx-auto">
-                <div className="flex items-center gap-3 mb-6">
+            <div className="w-full max-w-4xl mx-auto min-w-0">
+                <div className="flex flex-wrap items-center gap-3 mb-6">
                     <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center"
                         style={{ background: "rgba(232,255,0,0.12)", border: "1px solid rgba(232,255,0,0.18)" }}
@@ -161,9 +161,9 @@ const PaymentsTab: FC = () => {
         .reduce((sum, p) => sum + parseFloat(p.amount || "0"), 0);
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+        <div className="w-full max-w-4xl mx-auto min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3 min-w-0">
                     <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center"
                         style={{ background: "rgba(232,255,0,0.12)", border: "1px solid rgba(232,255,0,0.18)" }}
@@ -178,7 +178,7 @@ const PaymentsTab: FC = () => {
                 <button
                     onClick={scanForPayments}
                     disabled={scanning}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-bold border-none cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[12px] font-bold border-none cursor-pointer shrink-0"
                     style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}
                 >
                     {scanning ? (
@@ -205,10 +205,10 @@ const PaymentsTab: FC = () => {
                     </div>
                 </div>
 
-                <p className="text-[11px] font-bold tracking-widest uppercase mb-2" style={{ color: "#9b9b63" }}>
+                <p className="text-[11px] font-bold tracking-wider uppercase mb-2 whitespace-nowrap" style={{ color: "#9b9b63" }}>
                     Available Balance (stealth)
                 </p>
-                <p className="text-[48px] font-extrabold leading-none mb-3" style={{ color: "#e8ff00" }}>
+                <p className="text-3xl sm:text-[48px] font-extrabold leading-none mb-3 break-words" style={{ color: "#e8ff00" }}>
                     {totalEth.toFixed(4)}{" "}
                     <span className="text-[28px] text-white">ETH</span>
                 </p>
@@ -260,10 +260,10 @@ const PaymentsTab: FC = () => {
                     </button>
                 </div>
                 {showMeta && (
-                    <div
-                        className="rounded-xl border px-4 py-3 flex items-center justify-between gap-2"
-                        style={{ background: "#121208", borderColor: "#2a2a12" }}
-                    >
+                <div
+                    className="rounded-xl border px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
+                    style={{ background: "#121208", borderColor: "#2a2a12" }}
+                >
                         <p className="text-[10px] font-mono break-all flex-1" style={{ color: "#888" }}>
                             {stealthKeys.metaAddress}
                         </p>

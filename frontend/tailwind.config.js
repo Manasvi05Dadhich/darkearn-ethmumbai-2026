@@ -9,7 +9,10 @@ export default {
     extend: {
       colors: {
         neon: "#eaff00",
-        darkbg: "#060606"
+        darkbg: "#060606",
+        neon: "#ccff00",
+        cardBg: "#141414",
+        borderGray: "#262626",
       }
     },
   },

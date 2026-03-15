@@ -1,13 +1,39 @@
 import { useState, useEffect, type FC, type MouseEvent } from "react";
-import { Info, ExternalLink, CheckCircle2, Shield, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Info, ExternalLink, CheckCircle2, Shield, Loader2, Briefcase, Search, ArrowRight } from "lucide-react";
+import logo from "../assets/logo.png";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { CONTRACTS } from "../contracts";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { generateReputationProof, computeExpectedBand } from "../lib/zkProver";
+import { generateReputationProof, computeExpectedBand, MOCK_ZK } from "../lib/zkProver";
 import { toast } from "sonner";
+import { getStoredRole, getHunterDisplayName, setHunterDisplayName, generateHunterName, clearRoleStorage } from "../lib/roleStorage";
+import { useReputationNFT } from "../hooks/useReputationNFT";
 
 const OnboardingPage: FC = () => {
+    const navigate = useNavigate();
+    const { address } = useAccount();
+    const { hasNFT, isLoading } = useReputationNFT(address);
+    const role = getStoredRole();
+    const isHunter = role === "hunter";
+
+    const { writeContract, data: txHash, isPending: isMinting, error: mintError } = useWriteContract();
+    const { isSuccess: mintTxSuccess } = useWaitForTransactionReceipt({ hash: txHash });
+    const isMinted = mintTxSuccess;
+
+    useEffect(() => {
+        if (isLoading) return;
+        if (hasNFT && !isMinted) {
+            navigate("/", { replace: true });
+            return;
+        }
+        if (!role) {
+            navigate("/choose-role", { replace: true });
+        }
+    }, [hasNFT, isLoading, role, navigate, isMinted]);
+
     const [ensName, setEnsName] = useState("");
+    const [hunterName, setHunterName] = useState(() => getHunterDisplayName() || generateHunterName());
     const [isVerifying, setIsVerifying] = useState(false);
     const [isVerified, setIsVerified] = useState(false);
     const [verifyError, setVerifyError] = useState("");
@@ -17,21 +43,24 @@ const OnboardingPage: FC = () => {
     const [proofHex, setProofHex] = useState<`0x${string}` | null>(null);
     const [publicInputs, setPublicInputs] = useState<`0x${string}`[]>([]);
 
-    const { address } = useAccount();
-
+    const displayName = isHunter ? hunterName : ensName;
     const { data: existingTokenId } = useReadContract({
         ...CONTRACTS.ReputationNFT,
         functionName: "ensToTokenId",
-        args: [ensName],
-        query: { enabled: isVerifying && ensName.includes(".eth") },
+        args: [displayName],
+        query: { enabled: isVerifying && (isHunter ? !!hunterName : ensName.includes(".eth")) },
     });
+
+    useEffect(() => {
+        if (isHunter && hunterName) setHunterDisplayName(hunterName);
+    }, [isHunter, hunterName]);
 
     useEffect(() => {
         if (!isVerifying) return;
         if (existingTokenId !== undefined) {
             setIsVerifying(false);
             if (existingTokenId && BigInt(existingTokenId as bigint) > 0n) {
-                setVerifyError("This ENS name is already registered on DarkEarn.");
+                setVerifyError(isHunter ? "This username is already taken. Try regenerating." : "This ENS name is already registered on DarkEarn.");
                 setIsVerified(false);
             } else {
                 setIsVerified(true);
@@ -41,6 +70,12 @@ const OnboardingPage: FC = () => {
     }, [existingTokenId, isVerifying]);
 
     const handleVerify = () => {
+        if (isHunter) {
+            if (!hunterName) return;
+            setVerifyError("");
+            setIsVerifying(true);
+            return;
+        }
         if (!ensName.includes(".eth")) {
             setVerifyError("Must be a valid .eth name");
             return;
@@ -49,8 +84,13 @@ const OnboardingPage: FC = () => {
         setIsVerifying(true);
     };
 
-    const { writeContract, data: txHash, isPending: isMinting, error: mintError } = useWriteContract();
-    const { isSuccess: isMinted } = useWaitForTransactionReceipt({ hash: txHash });
+    const handleRegenerateHunterName = () => {
+        const newName = generateHunterName();
+        setHunterName(newName);
+        setHunterDisplayName(newName);
+        setIsVerified(false);
+        setVerifyError("");
+    };
 
     const handleGenerateProof = async () => {
         setProving(true);
@@ -82,22 +122,32 @@ const OnboardingPage: FC = () => {
     const handleMint = () => {
         if (!address) return;
 
-        if (mintMode === "zk" && proofReady && proofHex) {
+        const band = publicInputs[0] ? BigInt(publicInputs[0]) : 0n;
+
+        if (mintMode === "zk" && proofReady && proofHex && !MOCK_ZK) {
             writeContract({
                 ...CONTRACTS.ReputationNFT,
                 functionName: "mint",
-                args: [proofHex, publicInputs, ensName],
+                args: [proofHex, publicInputs, displayName],
             });
         } else {
             writeContract({
                 ...CONTRACTS.ReputationNFT,
                 functionName: "testMint",
-                args: [address, ensName, BigInt(0)],
+                args: [address, displayName, band],
             });
         }
     };
 
     const canMint = isVerified && (mintMode === "test" || proofReady);
+
+    if (isLoading || !role) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#060606]">
+                <div className="w-8 h-8 border-2 border-[#e8ff00] border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col items-center bg-[#060606] text-white font-sans overflow-x-hidden relative">
@@ -121,12 +171,19 @@ const OnboardingPage: FC = () => {
             <nav className="absolute top-0 left-0 right-0 z-50 border-b border-black/50 bg-[#060606]/95 backdrop-blur">
                 <div className="w-full px-4 md:px-8 flex items-center justify-between" style={{ height: 56 }}>
                     <div className="flex items-center gap-2">
-                        <Shield className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                        <span className="font-bold text-white tracking-widest text-[16px] uppercase font-sans">
-                            DARKEARN
-                        </span>
+                        <img src={logo} alt="DarkEarn" className="h-8 w-auto" />
                     </div>
-                    <ConnectButton accountStatus="avatar" chainStatus="icon" showBalance={false} />
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={() => { clearRoleStorage(); navigate("/choose-role"); }}
+                            className="text-xs text-[#888] hover:text-[#e8ff00] transition-colors cursor-pointer bg-transparent border-none"
+                            style={{ fontFamily: "inherit" }}
+                        >
+                            Change role
+                        </button>
+                        <ConnectButton accountStatus="avatar" chainStatus="icon" showBalance={false} />
+                    </div>
                 </div>
             </nav>
 
@@ -137,31 +194,95 @@ const OnboardingPage: FC = () => {
             />
 
             <div className="relative z-10 w-full flex flex-col flex-1 items-center justify-center pt-28 pb-16 px-6">
-                <div className="w-full max-w-xl flex flex-col">
+                <div className="w-full max-w-3xl flex flex-col">
 
                     {isMinted ? (
-                        <div
-                            className="verified-msg flex flex-col border p-8 rounded-lg items-center"
-                            style={{ background: "rgba(232,255,0,0.03)", borderColor: "#2a2a2a" }}
-                        >
+                        <div className="verified-msg flex flex-col gap-6">
+                            {/* Step 2: Success + Next steps */}
                             <div
-                                className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                                style={{ background: "rgba(232,255,0,0.1)" }}
+                                className="flex flex-col border p-8 rounded-lg items-center"
+                                style={{ background: "rgba(232,255,0,0.03)", borderColor: "#2a2a2a" }}
                             >
-                                <CheckCircle2 className="w-5 h-5" style={{ color: "#e8ff00" }} />
-                            </div>
-                            <h3 className="text-[15px] font-bold text-white mb-1">Profile created.</h3>
-                            <p className="text-[13px] mb-2 text-center" style={{ color: "#e8ff00" }}>
-                                You are now <span className="font-bold">{ensName}</span> on DarkEarn.
-                            </p>
-                            {mintMode === "zk" && (
-                                <p className="text-[11px] mb-4 text-center" style={{ color: "#22c55e" }}>
-                                    Minted with verified ZK proof — Band 0
+                                <div
+                                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                                    style={{ background: "rgba(232,255,0,0.1)" }}
+                                >
+                                    <CheckCircle2 className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                </div>
+                                <h3 className="text-[15px] font-bold text-white mb-1">Profile created.</h3>
+                                <p className="text-[13px] mb-2 text-center" style={{ color: "#e8ff00" }}>
+                                    You are now <span className="font-bold">{displayName}</span> on DarkEarn.
                                 </p>
-                            )}
-                            <p className="text-[12px] text-center" style={{ color: "#666" }}>
-                                Refresh the page to enter the dashboard.
-                            </p>
+                                {mintMode === "zk" && (
+                                    <p className="text-[11px] mb-4 text-center" style={{ color: "#22c55e" }}>
+                                        Minted with verified ZK proof — Band 0
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Step 2: What's next */}
+                            <div
+                                className="border p-6 rounded-lg"
+                                style={{ background: "rgba(10,10,10,0.8)", borderColor: "#1a1a1a" }}
+                            >
+                                <h4 className="text-[12px] font-bold tracking-[0.15em] uppercase mb-4" style={{ color: "#ccc" }}>
+                                    Step 2 — What&apos;s next?
+                                </h4>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate("/")}
+                                        className="flex-1 flex items-center gap-3 px-5 py-4 rounded-lg border transition-all cursor-pointer text-left"
+                                        style={{ background: "transparent", borderColor: "#222", fontFamily: "inherit" }}
+                                        onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
+                                            e.currentTarget.style.borderColor = "#e8ff00";
+                                            e.currentTarget.style.background = "rgba(232,255,0,0.05)";
+                                        }}
+                                        onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
+                                            e.currentTarget.style.borderColor = "#222";
+                                            e.currentTarget.style.background = "transparent";
+                                        }}
+                                    >
+                                        <Search className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                        <div>
+                                            <p className="text-[13px] font-bold text-white">Browse Bounties</p>
+                                            <p className="text-[11px]" style={{ color: "#666" }}>Find and apply to open tasks</p>
+                                        </div>
+                                    </button>
+                                    {!isHunter && (
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate("/dashboard?tab=post-bounty")}
+                                            className="flex-1 flex items-center gap-3 px-5 py-4 rounded-lg border transition-all cursor-pointer text-left"
+                                            style={{ background: "transparent", borderColor: "#222", fontFamily: "inherit" }}
+                                            onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
+                                                e.currentTarget.style.borderColor = "#e8ff00";
+                                                e.currentTarget.style.background = "rgba(232,255,0,0.05)";
+                                            }}
+                                            onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
+                                                e.currentTarget.style.borderColor = "#222";
+                                                e.currentTarget.style.background = "transparent";
+                                            }}
+                                        >
+                                            <Briefcase className="w-5 h-5" style={{ color: "#e8ff00" }} />
+                                            <div>
+                                                <p className="text-[13px] font-bold text-white">Post a Bounty</p>
+                                                <p className="text-[11px]" style={{ color: "#666" }}>Create a task and find talent</p>
+                                            </div>
+                                        </button>
+                                    )}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => navigate("/")}
+                                    className="w-full mt-4 py-4 rounded-lg font-bold text-[14px] uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer border-none"
+                                    style={{ background: "#e8ff00", color: "#000", fontFamily: "inherit" }}
+                                    onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => e.currentTarget.style.transform = "translateY(-1px)"}
+                                    onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => e.currentTarget.style.transform = "translateY(0)"}
+                                >
+                                    Enter Dashboard <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     ) : (
                         <>
@@ -170,14 +291,62 @@ const OnboardingPage: FC = () => {
                                     Create Your <span style={{ color: "#e8ff00" }}>DarkEarn</span> Profile
                                 </h1>
                                 <p className="text-[14px] leading-relaxed font-medium max-w-md" style={{ color: "#999" }}>
-                                    Link your ENS identity, generate a ZK proof, and mint your soulbound reputation NFT.
+                                    {isHunter
+                                        ? "Your anonymous identity is ready. Generate a ZK proof and mint your soulbound reputation NFT."
+                                        : "Link your ENS identity, generate a ZK proof, and mint your soulbound reputation NFT."}
                                 </p>
                             </div>
 
-                            {/* ── ENS NAME ── */}
+                            {/* ── HUNTER: RANDOM NAME ── */}
+                            {isHunter && (
+                                <div className="mb-6 flex flex-col gap-3">
+                                    <label className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: "#ccc" }}>
+                                        1. YOUR ANONYMOUS IDENTITY
+                                    </label>
+                                    <div className="flex gap-2 items-center">
+                                        <div
+                                            className="flex-1 px-5 py-3.5 rounded-lg text-[14px] font-mono"
+                                            style={{ background: "#060606", border: "1.5px solid #222", color: "#e8ff00" }}
+                                        >
+                                            {hunterName}
+                                        </div>
+                                        <button
+                                            onClick={handleRegenerateHunterName}
+                                            className="px-4 py-3.5 rounded-lg text-[12px] font-bold uppercase tracking-wider cursor-pointer shrink-0"
+                                            style={{
+                                                background: "transparent",
+                                                border: "1.5px solid #333",
+                                                color: "#888",
+                                                fontFamily: "inherit",
+                                            }}
+                                        >
+                                            Regenerate
+                                        </button>
+                                    </div>
+                                    <p className="text-[12px]" style={{ color: "#666" }}>
+                                        Fully anonymous. No ENS required.
+                                    </p>
+                                    <button
+                                        onClick={handleVerify}
+                                        disabled={isVerified || !hunterName || isVerifying}
+                                        className="verify-btn px-5 py-3 rounded-lg font-bold text-[12px] uppercase tracking-wider transition-all border-none cursor-pointer w-fit"
+                                        style={{
+                                            background: isVerified ? "#22c55e" : "#e8ff00",
+                                            color: isVerified ? "#fff" : "#000",
+                                            cursor: isVerified || !hunterName || isVerifying ? "not-allowed" : "pointer",
+                                            fontFamily: "inherit",
+                                        }}
+                                    >
+                                        {isVerifying ? "..." : isVerified ? "✓ Available" : "Check availability"}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* ── POSTER: ENS NAME ── */}
+                            {!isHunter && (
                             <div className="mb-6 flex flex-col gap-3">
                                 <label className="text-[11px] font-bold tracking-[0.2em] uppercase" style={{ color: "#ccc" }}>
-                                    1. ENS NAME
+                                    1. ENS NAME (REQUIRED)
                                 </label>
                                 <div className="flex gap-2">
                                     <div className="relative flex-1">
@@ -258,6 +427,7 @@ const OnboardingPage: FC = () => {
                                     </div>
                                 )}
                             </div>
+                            )}
 
                             {/* ── MINT MODE ── */}
                             {isVerified && (

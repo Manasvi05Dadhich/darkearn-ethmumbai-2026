@@ -3,6 +3,7 @@ import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { config } from "../lib/wagmi";
+import { theme } from "../theme";
 
 import "@rainbow-me/rainbowkit/styles.css";
 
@@ -13,7 +14,7 @@ export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => (
         <QueryClientProvider client={queryClient}>
             <RainbowKitProvider
                 theme={darkTheme({
-                    accentColor: "#e8ff00",
+                    accentColor: theme.color.accent,
                     accentColorForeground: "#000",
                     borderRadius: "small",
                     fontStack: "system",

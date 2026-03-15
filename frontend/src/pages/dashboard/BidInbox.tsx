@@ -21,7 +21,7 @@ const BidInboxTab: FC = () => {
 
     if (!address) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <p className="text-[14px]" style={{ color: "#888" }}>
                     Connect your wallet to view your bid inbox.
                 </p>
@@ -31,7 +31,7 @@ const BidInboxTab: FC = () => {
 
     if (!decrypted) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <div className="relative inline-block mb-6">
                     <div className="absolute inset-0 rounded-full opacity-30 blur-xl" style={{ background: "#e8ff00" }} />
                     <Lock
@@ -74,7 +74,7 @@ const BidInboxTab: FC = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-4xl text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: "#e8ff00" }} />
                 <p className="text-[13px]" style={{ color: "#888" }}>Loading bids from chain...</p>
             </div>
@@ -82,7 +82,7 @@ const BidInboxTab: FC = () => {
     }
 
     return (
-        <div className="max-w-4xl">
+        <div className="w-full max-w-4xl min-w-0">
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-4">
                     <h2 className="text-[15px] font-bold text-white">Bid Inbox</h2>
@@ -134,8 +134,8 @@ const BidInboxTab: FC = () => {
                                 borderLeft: "3px solid #e8ff00",
                             }}
                         >
-                            <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-start gap-3">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                                <div className="flex items-start gap-3 min-w-0 flex-1">
                                     <div
                                         className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style={{ background: "rgba(232,255,0,0.1)" }}
@@ -155,7 +155,7 @@ const BidInboxTab: FC = () => {
                                     href={`https://sepolia.basescan.org/tx/${bid.txHash}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-[11px] flex items-center gap-1 flex-shrink-0"
+                                    className="text-[11px] flex items-center gap-1 shrink-0"
                                     style={{ color: "#60a5fa" }}
                                 >
                                     <ExternalLink className="w-3 h-3" /> View

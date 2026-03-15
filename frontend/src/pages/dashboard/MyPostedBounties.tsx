@@ -76,7 +76,7 @@ const MyPostedBountiesTab: FC = () => {
 
     if (!address) {
         return (
-            <div className="text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <p className="text-[14px]" style={{ color: "#888" }}>Connect your wallet to see your posted bounties.</p>
             </div>
         );
@@ -84,7 +84,7 @@ const MyPostedBountiesTab: FC = () => {
 
     if (isLoading) {
         return (
-            <div className="text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: "#e8ff00" }} />
                 <p className="text-[13px]" style={{ color: "#888" }}>Loading your bounties...</p>
             </div>
@@ -93,7 +93,7 @@ const MyPostedBountiesTab: FC = () => {
 
     if (myBounties.length === 0) {
         return (
-            <div className="text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <p className="text-[16px] font-bold text-white mb-2">No bounties posted yet</p>
                 <p className="text-[13px]" style={{ color: "#888" }}>Go to "Post Bounty" to create your first bounty.</p>
             </div>
@@ -101,14 +101,14 @@ const MyPostedBountiesTab: FC = () => {
     }
 
     return (
-        <div className="max-w-5xl">
+        <div className="w-full max-w-5xl min-w-0">
             <div className="rounded-xl border overflow-hidden" style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}>
                 {myBounties.map(bounty => {
                     const isExpanded = expanded === bounty.id;
                     return (
                         <div key={bounty.id} style={{ borderBottom: "1px solid #111" }}>
                             <button onClick={() => setExpanded(isExpanded ? null : bounty.id)}
-                                className="w-full flex items-center gap-4 px-6 py-4 bg-transparent border-none cursor-pointer text-left transition-colors hover:bg-[#0d0d0d]"
+                                className="w-full flex flex-wrap items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 bg-transparent border-none cursor-pointer text-left transition-colors hover:bg-[#0d0d0d]"
                                 style={{ fontFamily: "inherit" }}>
                                 <span className="flex-1 text-[14px] font-semibold text-white">{bounty.title}</span>
                                 <span className="text-[13px] font-bold" style={{ color: "#e8ff00" }}>{bounty.prize}</span>

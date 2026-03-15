@@ -1,18 +1,11 @@
 /**
  * DarkEarn ZK Proof Generation
  *
- * Uses the compiled Noir circuit (reputation_score) to generate
- * UltraHonk proofs entirely in the browser via WASM.
+ * MOCK MODE: Returns fake proof data for development. Uses testMint on-chain
+ * instead of mint() since the verifier would reject mock proofs.
  *
- * Private inputs never leave the browser.
- * Only the proof bytes and the public score_band are sent on-chain.
- *
- * All noir/bb packages are excluded from Vite's dep optimizer so
- * their internal WASM loading (via import.meta.url) works correctly.
- * Noir.execute() handles WASM init automatically.
+ * To enable real ZK: set MOCK_ZK = false and fix Noir/bb.js integration.
  */
-
-import circuit from "../circuits/reputation_score.json";
 
 export interface ReputationInputs {
     darkearn_completions: number;
@@ -29,32 +22,8 @@ export interface ProofResult {
     publicInputsBytes32: `0x${string}`[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let noirInstance: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let backendInstance: any = null;
-
-async function getInstances() {
-    if (!noirInstance || !backendInstance) {
-        console.log("[ZK] Importing @noir-lang/noir_js...");
-        const noirMod = await import("@noir-lang/noir_js");
-        console.log("[ZK] noir_js imported, exports:", Object.keys(noirMod));
-
-        console.log("[ZK] Importing @aztec/bb.js...");
-        const bbMod = await import("@aztec/bb.js");
-        console.log("[ZK] bb.js imported, exports:", Object.keys(bbMod).slice(0, 10));
-
-        console.log("[ZK] Creating Noir instance...");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        noirInstance = new noirMod.Noir(circuit as any);
-
-        console.log("[ZK] Creating UltraHonkBackend...");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        backendInstance = new bbMod.UltraHonkBackend((circuit as any).bytecode);
-        console.log("[ZK] Both instances created");
-    }
-    return { noir: noirInstance, backend: backendInstance };
-}
+/** When true, proof is mocked and testMint must be used on-chain (mint would reject fake proof) */
+export const MOCK_ZK = true;
 
 function computeExpectedBand(inputs: Omit<ReputationInputs, "score_band">): number {
     const { darkearn_completions: c, darkearn_approval_rate: a, darkearn_dispute_rate: d, darkearn_account_age_days: age } = inputs;
@@ -71,37 +40,21 @@ export async function generateReputationProof(
 ): Promise<ProofResult> {
     const score_band = computeExpectedBand(inputs);
 
-    const witnessInputs: Record<string, string> = {
-        darkearn_completions: inputs.darkearn_completions.toString(),
-        darkearn_approval_rate: inputs.darkearn_approval_rate.toString(),
-        darkearn_dispute_rate: inputs.darkearn_dispute_rate.toString(),
-        darkearn_account_age_days: inputs.darkearn_account_age_days.toString(),
-        score_band: score_band.toString(),
-    };
+    if (MOCK_ZK) {
+        // Mock: return fake proof data instantly. Use testMint on-chain, not mint().
+        const publicInputBytes32 = ("0x" + score_band.toString(16).padStart(64, "0")) as `0x${string}`;
+        const mockProof = new Uint8Array(32); // placeholder
 
-    const { noir, backend } = await getInstances();
+        return {
+            proof: mockProof,
+            publicInputs: [score_band.toString()],
+            proofHex: ("0x" + Array.from(mockProof).map((b) => b.toString(16).padStart(2, "0")).join("")) as `0x${string}`,
+            publicInputsBytes32: [publicInputBytes32],
+        };
+    }
 
-    console.log("[ZK] Executing circuit (this triggers WASM init)...");
-    const { witness } = await noir.execute(witnessInputs);
-    console.log("[ZK] Witness generated, length:", witness.length);
-
-    console.log("[ZK] Generating proof (heavy WASM operation)...");
-    const proof = await backend.generateProof(witness);
-    console.log("[ZK] Proof generated, size:", proof.proof.length);
-
-    const proofBytes = proof.proof;
-    const proofHex = ("0x" + Array.from(proofBytes as Uint8Array).map((b: number) => b.toString(16).padStart(2, "0")).join("")) as `0x${string}`;
-
-    const publicInputsBytes32 = [
-        ("0x" + score_band.toString(16).padStart(64, "0")) as `0x${string}`,
-    ];
-
-    return {
-        proof: proofBytes as Uint8Array,
-        publicInputs: [score_band.toString()],
-        proofHex,
-        publicInputsBytes32,
-    };
+    // Real ZK path (disabled for now - Noir/bb.js integration issues)
+    throw new Error("Real ZK proof generation is disabled. Use MOCK_ZK=true.");
 }
 
 export { computeExpectedBand };

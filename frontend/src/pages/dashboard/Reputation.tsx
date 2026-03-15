@@ -4,7 +4,7 @@ import { useUserNFT } from "../../hooks/useUserNFT";
 import { useSkills } from "../../hooks/useSkills";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { CONTRACTS } from "../../contracts";
-import { generateReputationProof } from "../../lib/zkProver";
+import { generateReputationProof, MOCK_ZK } from "../../lib/zkProver";
 import { toast } from "sonner";
 
 const BAND_REQUIREMENTS = [
@@ -51,7 +51,7 @@ const ReputationTab: FC = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-4xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: "#e8ff00" }} />
                 <p className="text-[13px]" style={{ color: "#888" }}>Loading reputation from chain...</p>
             </div>
@@ -71,7 +71,7 @@ const ReputationTab: FC = () => {
     const tasksToNext = nextBand ? Math.max(0, nextBand.completions - totalCompletions) : 0;
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto min-w-0">
             <h2 className="text-2xl font-bold text-white text-center mb-8">Reputation</h2>
 
             <div className="flex flex-col items-center mb-8">
@@ -124,7 +124,7 @@ const ReputationTab: FC = () => {
                         : "Maximum band reached."}
                 </p>
 
-                {nextBand && tasksToNext <= 0 && tokenId !== null && (
+                {nextBand && tasksToNext <= 0 && tokenId !== null && !MOCK_ZK && (
                     <button
                         onClick={handleUpgradeBand}
                         disabled={upgrading || upgradePending}
@@ -183,7 +183,7 @@ const ReputationTab: FC = () => {
                         return (
                             <div
                                 key={b.band}
-                                className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg"
+                                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 px-4 py-3 rounded-lg"
                                 style={{
                                     background: isCurrent ? "#e8ff00" : "transparent",
                                     border: isCurrent

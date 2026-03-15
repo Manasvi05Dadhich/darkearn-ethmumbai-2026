@@ -27,7 +27,7 @@ const SkillsTab: FC = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-4xl text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: "#e8ff00" }} />
                 <p className="text-[13px]" style={{ color: "#888" }}>Loading skills from SkillRegistry...</p>
             </div>
@@ -35,7 +35,7 @@ const SkillsTab: FC = () => {
     }
 
     return (
-        <div className="max-w-4xl">
+        <div className="w-full max-w-4xl min-w-0">
             <div
                 className="p-4 rounded-lg border mb-6"
                 style={{ background: "rgba(232,255,0,0.03)", borderColor: "rgba(232,255,0,0.1)" }}

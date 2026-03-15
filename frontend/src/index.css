@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+
+  .dotted-grid {
+    background-size: 30px 30px;
+    background-image: radial-gradient(circle, #222 1px, transparent 1px);
+  }
+  
+  .role-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .role-card:hover {
+    border-color: #ccff00;
+    transform: translateY(-4px);
+    box-shadow: 0 0 20px rgba(204, 255, 0, 0.1);
+  }
+    

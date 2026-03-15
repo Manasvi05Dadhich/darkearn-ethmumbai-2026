@@ -118,7 +118,7 @@ const PostBountyTab: FC = () => {
     const formBg = "#1a1f1a";
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto px-2 sm:px-0">
             {isConfirmed ? (
                 <div className="text-center py-16">
                     <CheckCircle2 className="w-14 h-14 mx-auto mb-4" style={{ color: "#22c55e" }} />

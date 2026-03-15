@@ -1,4 +1,5 @@
 import { useState, type FC } from "react";
+import { Link } from "react-router-dom";
 import {
     Loader2,
     CheckCircle2,
@@ -504,7 +505,7 @@ const ApplicationsTab: FC = () => {
 
     if (!address) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <p className="text-[14px]" style={{ color: "#888" }}>
                     Connect your wallet to see your applications.
                 </p>
@@ -514,7 +515,7 @@ const ApplicationsTab: FC = () => {
 
     if (isLoading) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" style={{ color: "#e8ff00" }} />
                 <p className="text-[13px]" style={{ color: "#888" }}>Loading applications from chain...</p>
             </div>
@@ -523,18 +524,21 @@ const ApplicationsTab: FC = () => {
 
     if (applications.length === 0) {
         return (
-            <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-full max-w-4xl mx-auto text-center py-16 min-w-0">
                 <FileText className="w-10 h-10 mx-auto mb-4" style={{ color: "#333" }} />
                 <h3 className="text-[16px] font-bold text-white mb-2">No applications yet</h3>
-                <p className="text-[13px]" style={{ color: "#777" }}>
+                <p className="text-[13px] mb-4" style={{ color: "#777" }}>
                     Browse bounties and apply to start working. Your applications will appear here.
                 </p>
+                <Link to="/" className="inline-block px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider rounded-lg border transition-colors no-underline" style={{ borderColor: "#e8ff00", color: "#e8ff00" }}>
+                    Browse Bounties
+                </Link>
             </div>
         );
     }
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full max-w-4xl mx-auto min-w-0">
             <div className="space-y-2">
                 {applications.map((app: MyApplication) => {
                     const style = STATUS_STYLES[app.status] || STATUS_STYLES.pending;
