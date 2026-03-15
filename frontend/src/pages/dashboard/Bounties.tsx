@@ -1,8 +1,11 @@
-import { useState, useMemo, type FC, type MouseEvent } from "react";
-import { Search, ShieldCheck, Clock, Users, Loader2 } from "lucide-react";
-import { useReadContract, useReadContracts } from "wagmi";
+import { useState, useMemo, useEffect, type FC, type MouseEvent } from "react";
+import { Search, ShieldCheck, Clock, Users, Loader2, X, ArrowRight, Lock } from "lucide-react";
+import { useReadContract, useReadContracts, useWriteContract, useWaitForTransactionReceipt, useAccount } from "wagmi";
 import { CONTRACTS } from "../../contracts";
 import { formatEther } from "viem";
+import { saveApplication } from "../../hooks/useMyApplications";
+import { useUserNFT } from "../../hooks/useUserNFT";
+import { toast } from "sonner";
 
 const CATEGORIES = ["All", "Solidity", "Cairo", "Frontend", "Security", "Content", "Design"];
 const CATEGORY_NAMES: Record<number, string> = { 0: "Solidity", 1: "Cairo", 2: "Frontend", 3: "Security", 4: "Content", 5: "Design" };
@@ -20,9 +23,197 @@ interface Bounty {
     applicants: number;
 }
 
+/* ─── Apply Modal ─────────────────────────────────────────────── */
+const ApplyModal: FC<{
+    bounty: Bounty;
+    onClose: () => void;
+}> = ({ bounty, onClose }) => {
+    const { address } = useAccount();
+    const { ensName: userEnsName } = useUserNFT();
+    const [applyMessage, setApplyMessage] = useState("");
+    const [portfolioLink, setPortfolioLink] = useState("");
+
+    const { writeContract, data: applyTxHash, isPending, error: applyError } = useWriteContract();
+    const { isSuccess: applyConfirmed } = useWaitForTransactionReceipt({ hash: applyTxHash });
+
+    const [submitted, setSubmitted] = useState(false);
+
+    useEffect(() => {
+        if (applyConfirmed && bounty && address) {
+            setSubmitted(true);
+            saveApplication(address, bounty.id, bounty.applicants + 1);
+            toast.success(`Applied to "${bounty.title}" as Applicant #${bounty.applicants + 1}`);
+        }
+    }, [applyConfirmed, bounty, address]);
+
+    useEffect(() => {
+        if (applyError) {
+            toast.error(applyError.message?.slice(0, 80) || "Application failed");
+        }
+    }, [applyError]);
+
+    const handleApply = () => {
+        if (!bounty || !address || !applyMessage.trim()) return;
+        const fullMessage = portfolioLink
+            ? `${applyMessage.trim()}\n\nPortfolio/Links: ${portfolioLink.trim()}`
+            : applyMessage.trim();
+        writeContract({
+            ...CONTRACTS.BountyEscrow,
+            functionName: "applyToBounty",
+            args: [BigInt(bounty.id), userEnsName || "anon", fullMessage],
+        });
+    };
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)" }}
+            onClick={onClose}
+        >
+            <div
+                className="w-full max-w-lg rounded-xl border overflow-hidden"
+                style={{ background: "#0c0c0c", borderColor: "#1a1a1a", maxHeight: "90vh", overflowY: "auto" }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-5 border-b" style={{ borderColor: "#1a1a1a" }}>
+                    <h2 className="text-[15px] font-bold text-white">Apply to Bounty</h2>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border cursor-pointer bg-transparent"
+                        style={{ borderColor: "#222" }}
+                    >
+                        <X className="w-4 h-4" style={{ color: "#888" }} />
+                    </button>
+                </div>
+
+                {/* Bounty Info */}
+                <div className="p-5 border-b" style={{ borderColor: "#1a1a1a" }}>
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-[12px]" style={{ color: "#777" }}>{bounty.poster}</span>
+                        <span className="font-bold text-[15px]" style={{ color: "#e8ff00" }}>
+                            {bounty.prize} <span className="text-[11px]" style={{ color: "#888" }}>ETH</span>
+                        </span>
+                    </div>
+                    <h3 className="text-[14px] font-bold text-white mb-2">{bounty.title}</h3>
+                    <span
+                        className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                        style={{ background: `${bounty.catColor}15`, color: bounty.catColor }}
+                    >
+                        {bounty.category}
+                    </span>
+                    {bounty.desc && (
+                        <p className="text-[12px] mt-3" style={{ color: "#777" }}>{bounty.desc}</p>
+                    )}
+                    <div className="flex items-center gap-4 mt-3">
+                        <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" style={{ color: "#555" }} />
+                            <span className="text-[11px]" style={{ color: "#555" }}>{bounty.deadline}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Users className="w-3 h-3" style={{ color: "#555" }} />
+                            <span className="text-[11px]" style={{ color: "#555" }}>{bounty.applicants} applied</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Apply Form / Status */}
+                <div className="p-5">
+                    {submitted ? (
+                        <div className="text-center py-4">
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"
+                                style={{ background: "rgba(34,197,94,0.1)" }}>
+                                <ShieldCheck className="w-6 h-6" style={{ color: "#22c55e" }} />
+                            </div>
+                            <p className="text-[14px] font-bold text-white mb-1">Application submitted!</p>
+                            <p className="text-[12px] mb-4" style={{ color: "#888" }}>
+                                You appear as Applicant #{bounty.applicants + 1} — your identity is anonymous until revealed.
+                            </p>
+                            <button
+                                onClick={onClose}
+                                className="px-6 py-2.5 rounded-lg text-[12px] font-bold border cursor-pointer bg-transparent"
+                                style={{ borderColor: "#333", color: "#ccc", fontFamily: "inherit" }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col gap-4">
+                            <div className="p-3 rounded-lg" style={{ background: "rgba(232,255,0,0.04)", border: "1px solid rgba(232,255,0,0.1)" }}>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Lock className="w-3 h-3" style={{ color: "#e8ff00" }} />
+                                    <span className="text-[10px] font-bold" style={{ color: "#e8ff00" }}>ANONYMOUS APPLICATION</span>
+                                </div>
+                                <p className="text-[11px]" style={{ color: "#888" }}>
+                                    Your application is anonymous. The poster can only see your applicant number
+                                    until they choose to reveal your identity.
+                                </p>
+                            </div>
+
+                            <div>
+                                <label className="text-[11px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "#666" }}>
+                                    Why are you the right fit? *
+                                </label>
+                                <textarea
+                                    value={applyMessage}
+                                    onChange={(e) => setApplyMessage(e.target.value)}
+                                    rows={4}
+                                    placeholder="Describe your relevant experience, approach, and timeline..."
+                                    className="w-full text-[13px] px-4 py-3 rounded-lg outline-none border"
+                                    style={{ background: "#0a0a0a", borderColor: "#1a1a1a", color: "#fff", resize: "vertical", fontFamily: "inherit" }}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-[11px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "#666" }}>
+                                    Portfolio / Links (optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={portfolioLink}
+                                    onChange={(e) => setPortfolioLink(e.target.value)}
+                                    placeholder="https://github.com/you, demo link, past work..."
+                                    className="w-full text-[13px] px-4 py-3 rounded-lg outline-none border"
+                                    style={{ background: "#0a0a0a", borderColor: "#1a1a1a", color: "#fff", fontFamily: "inherit" }}
+                                />
+                            </div>
+
+                            {applyError && (
+                                <p className="text-[12px]" style={{ color: "#ef4444" }}>
+                                    {applyError.message?.slice(0, 100)}
+                                </p>
+                            )}
+
+                            <button
+                                onClick={handleApply}
+                                disabled={!applyMessage.trim() || isPending}
+                                className="w-full py-3.5 rounded-lg text-[13px] font-bold uppercase tracking-wider border-none cursor-pointer flex items-center justify-center gap-2"
+                                style={{
+                                    background: applyMessage.trim() ? "#e8ff00" : "#222",
+                                    color: applyMessage.trim() ? "#000" : "#555",
+                                    cursor: applyMessage.trim() ? "pointer" : "not-allowed",
+                                    fontFamily: "inherit",
+                                }}
+                            >
+                                {isPending ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Confirm in Wallet...</>
+                                ) : (
+                                    <>Submit Application <ArrowRight className="w-4 h-4" /></>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/* ─── Bounties Tab ────────────────────────────────────────────── */
 const BountiesTab: FC = () => {
     const [search, setSearch] = useState("");
     const [cat, setCat] = useState("All");
+    const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null);
 
     // Read bounty count
     const { data: nextId, isLoading: countLoading } = useReadContract({ ...CONTRACTS.BountyEscrow, functionName: "nextBountyId" });
@@ -98,9 +289,14 @@ const BountiesTab: FC = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filtered.map(b => (
-                        <div key={b.id} className="p-5 rounded-xl border transition-all cursor-pointer" style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}
-                            onMouseEnter={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.15)"; }}
-                            onMouseLeave={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = "#1a1a1a"; }}>
+                        <div
+                            key={b.id}
+                            className="p-5 rounded-xl border transition-all cursor-pointer"
+                            style={{ background: "#0a0a0a", borderColor: "#1a1a1a" }}
+                            onClick={() => setSelectedBounty(b)}
+                            onMouseEnter={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = "rgba(232,255,0,0.15)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                            onMouseLeave={(e: MouseEvent<HTMLDivElement>) => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; }}
+                        >
                             <div className="flex justify-between mb-3">
                                 <span className="text-[12px]" style={{ color: "#777" }}>{b.poster}</span>
                                 <span className="font-bold text-[15px]" style={{ color: "#e8ff00" }}>{b.prize} <span className="text-[11px]" style={{ color: "#888" }}>ETH</span></span>
@@ -116,6 +312,14 @@ const BountiesTab: FC = () => {
                         </div>
                     ))}
                 </div>
+            )}
+
+            {/* Apply Modal */}
+            {selectedBounty && (
+                <ApplyModal
+                    bounty={selectedBounty}
+                    onClose={() => setSelectedBounty(null)}
+                />
             )}
         </div>
     );
